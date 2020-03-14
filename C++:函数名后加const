@@ -1,0 +1,7 @@
+1.	class MyClass  
+2.	{   
+3.	  public:   
+4.	      int GetData(int Id,int Type,char* pData)const;  
+5.	}  
+通过把类成员函数声明为const   以表明它们不修改类对象。
+任何不会修改数据成员的函数都应该声明为const类型。如果在编写const成员函数时，不慎修改了数据成员，或者调用了其它非const成员函数，编译器将指出错误，这样做的好处是提高程序了的健壮性。
