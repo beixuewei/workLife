@@ -1,0 +1,41 @@
+把一个声明从右向左读。
+char * const cp; ( * 读成 pointer to ) cp is a const pointer to char
+const char * p; p is a pointer to const char;
+char const * p; 同上因为C++里面没有const*的运算符，所以const只能属于前面的类型。
+
+C++标准规定，const关键字放在类型或变量名之前等价的。
+const int n=5; //same as below
+int const m=10
+
+结论：
+char * const cp     : 定义一个指向字符的指针常数，即const指针(指向的地址不能变，但此地址的值可变)
+const char* p       : 定义一个指向字符常数的指针（指向内存地址的值不能变，
+                                但是指针本身的值（指针指向的地址）可变）
+char const* p       : 等同于const char* p
+
+const   char   **是一个指向指针的指针，那个指针又指向一个字符串常量。  
+char   **也是一个指向指针的指针，那个指针又指向一个字符串变量。 
+
+
+const char* p= "hello world"; 
+技巧：将* 读作pointer to,从右往左读。于是：
+char* const cp;   cp is a const pointer to char ;
+所以 p++ 不允许；*p = '3' 可以；
+
+
+const char*p ：p is pointer to const char ;
+所以p++ 允许，*p ='3'不允许；
+
+
+一道题目：
+［题目］const char *p="hello";
+       foo(&p);//函数foo(const char **pp)
+下面说法正确的是［］
+A.函数foo()不能改变p指向的字符串内容
+B.函数foo()不能使指针p指向malloc生成的地址
+C.函数foo()可以使p指向新的字符串常量
+D.函数foo()可以把p赋值为 NULL.
+
+
+
+ACD
