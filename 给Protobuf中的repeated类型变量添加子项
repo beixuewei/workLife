@@ -1,0 +1,10 @@
+Protobuf为repeated类型变量生成的自动代码，不提供通常的类似add_item(item)的添加子项的成员函数，Protobuf的做法是：
+[cpp] view plain copy
+1.	UserDocChangesResp changes;  
+2.	DocChangeInfo change;  
+3.	DocChangeInfo* pChange = changes.add_docchangeinfos();  
+4.	*pChange = change;  
+上面的例子中，UserDocChangesResp有个子项docchangeinfos_，它是DocChangeInfo的repeated类型变量，通过上面的第3行，在docchangeinfos_中创建一个子项，并将子项指针传出，第4行做赋值操作。
+
+注意，第4行其实是调用DocChangeInfo类重载的operator=()，其中会自动调用 对DocChangeInfo各个属性的set方法，从而完成DocChangeInfo所有属性的赋值操作。
+当然，不按照第4行的方法用一个=搞定，自己手工去逐个调用 DocChangeInfo各个属性的set方法，也是可以的。
