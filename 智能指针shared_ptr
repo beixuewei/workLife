@@ -1,0 +1,45 @@
+智能指针shared_ptr，不要用同一个类指针进行shared_ptr创建，因为引用计数不加1.
+定义后先用get()方法来检查是否定义成功，use_count()方法可以查看引用计数，reset()方法可以释放引用。
+
+http://3ms.huawei.com/hi/group/1974/wiki_4122643.html
+2.1      总括   
+对于编译器来说，智能指针实际上是一个栈对象，并非指针类型，在栈对象生命期即将结束时，智能指针通过析构函数释放有它管理的堆内存。所有智能指针都重载了“operator->”操作符，直接返回对象的引用，用以操作对象。访问智能指针原来的方法则使用“.”操作符。
+访问智能指针包含的裸指针则可以用 get() 函数。由于智能指针是一个对象，所以if (my_smart_object)永远为真，要判断智能指针的裸指针是否为空，需要这样判断：if (my_smart_object.get())。
+智能指针包含了 reset() 方法，如果不传递参数（或者传递 NULL），则智能指针会释放当前管理的内存。如果传递一个对象，则智能指针会释放当前对象，来管理新传入的对象。
+
+2.4      boost::shared_ptr   
+boost::shared_ptr 属于 boost 库，定义在 namespace boost 中，包含头文件#include<boost/smart_ptr.hpp> 便可以使用。在上面我们看到 boost::scoped_ptr 独享所有权，不允许赋值、拷贝，boost::shared_ptr 是专门用于共享所有权的，由于要共享所有权，其在内部使用了引用计数。boost::shared_ptr 也是用于管理单个堆内存对象的。
+我们还是从代码开始分析：
+void TestSharedPtr(boost::shared_ptr<Simple> memory) {  // 注意：无需使用 reference (或 const reference)
+  memory->PrintSomething();
+  std::cout << "TestSharedPtr UseCount: " << memory.use_count() << std::endl;
+}
+ 
+void TestSharedPtr2() {
+  boost::shared_ptr<Simple> my_memory(new Simple(1));
+  if (my_memory.get()) {
+    my_memory->PrintSomething();
+    my_memory.get()->info_extend = "Addition";
+    my_memory->PrintSomething();
+    (*my_memory).info_extend += " other";
+    my_memory->PrintSomething();
+  }
+ 
+  std::cout << "TestSharedPtr2 UseCount: " << my_memory.use_count() << std::endl;
+  TestSharedPtr(my_memory);
+  std::cout << "TestSharedPtr2 UseCount: " << my_memory.use_count() << std::endl;
+ 
+  //my_memory.release();// 编译 error: 同样，shared_ptr 也没有 release 函数
+}
+执行结果为：
+Simple: 1
+PrintSomething:
+PrintSomething: Addition
+PrintSomething: Addition other
+TestSharedPtr2 UseCount: 1
+PrintSomething: Addition other
+TestSharedPtr UseCount: 2
+TestSharedPtr2 UseCount: 1
+~Simple: 1
+boost::shared_ptr 也可以很方便的使用。并且没有 release() 函数。关键的一点，boost::shared_ptr 内部维护了一个引用计数，由此可以支持复制、参数传递等。boost::shared_ptr 提供了一个函数 use_count() ，此函数返回 boost::shared_ptr 内部的引用计数。查看执行结果，我们可以看到在 TestSharedPtr2 函数中，引用计数为 1，传递参数后（此处进行了一次复制），在函数TestSharedPtr 内部，引用计数为2，在 TestSharedPtr 返回后，引用计数又降低为 1。当我们需要使用一个共享对象的时候，boost::shared_ptr 是再好不过的了。
+
