@@ -1,0 +1,97 @@
+8.1	strtok功能
+编辑
+分解字符串为一组字符串。s为要分解的字符串，delim为分隔符字符串。
+例如：strtok("abc,def,ghi",",")，最后可以分割成为abc def ghi.尤其在点分十进制的IP中提取应用较多。
+strtok的函数原型为char *strtok(char *s, char *delim)，功能为“Parse S into tokens separated by characters in DELIM.If S is NULL, the saved pointer in SAVE_PTR is used as the next starting point. ” 翻译成汉语就是：作用于字符串s，以包含在delim中的字符为分界符，将s切分成一个个子串；如果，s为空值NULL，则函数保存的指针SAVE_PTR在下一次调用中将作为起始位置。
+8.2	strtok说明
+编辑
+strtok()用来将字符串分割成一个个片段。参数s指向欲分割的字符串，参数delim则为分割字符串中包含的所有字符。当strtok()在参数s的字符串中发现参数delim中包含的分割字符时,则会将该字符改为\0 字符。在第一次调用时，strtok()必需给予参数s字符串，往后的调用则将参数s设置成NULL。每次调用成功则返回指向被分割出片段的指针。
+8.3	strtok返回值
+编辑
+从s开头开始的一个个被分割的串。当s中的字符查找到末尾时，返回NULL。
+如果查找不到delim中的字符时，返回当前strtok的字符串的指针。
+所有delim中包含的字符都会被滤掉，并将被滤掉的地方设为一处分割的节点。
+8.4	strtok使用
+编辑
+strtok函数会破坏被分解字符串的完整，调用前和调用后的s已经不一样了。如果要保持原字符串的完整，可以使用strchr和sscanf的组合等。
+8.4.1	strtokc
+#include<string.h>
+#include<stdio.h>
+int main(void)
+{
+    char input[16]="abc,d";
+    char*p;
+    /*strtok places a NULL terminator
+    infront of the token,if found*/
+    p=strtok(input,",");
+    if(p)
+        printf("%s\n",p);
+        /*Asecond call to strtok using a NULL
+        as the first parameter returns a pointer
+        to the character following the token*/
+    p=strtok(NULL,",");
+    if(p)
+        printf("%s\n",p);
+    return 0;
+}
+
+8.4.2	strtokc++
+#include<iostream>
+#include<cstring>
+using namespace std;
+int main()
+{
+    char sentence[]="This is a sentence with 7 tokens";
+    cout << "The string to be tokenized is:\n" << sentence << "\n\nThe tokens are:\n\n";
+    char *tokenPtr=strtok(sentence," ");
+    while(tokenPtr!=NULL)　{
+        cout<<tokenPtr<<'\n';
+        tokenPtr=strtok(NULL," ");
+    }
+    //cout << "After strtok,sentence=" << tokenPtr<<endl;
+    return 0;
+}
+函数第一次调用需设置两个参数。第一次分割的结果，返回串中第一个 ',' 之前的字符串,也就是上面的程序第一次输出abc。
+第二次调用该函数strtok(NULL,","),第一个参数设置为NULL。结果返回分割依据后面的字串，即第二次输出d。
+strtok是一个线程不安全的函数，因为它使用了静态分配的空间来存储被分割的字符串位置
+线程安全的函数叫strtok_r,ca
+运用strtok来判断ip或者mac的时候务必要先用其他的方法判断'.'或':'的个数，因为用strtok截断的话，比如："192..168.0...8..."这个字符串，strtok只会截取四次，中间的...无论多少都会被当作一个key
+其他相关信息
+
+推荐做法：带有_r的函数主要来自于UNIX下面。所有的带有_r和不带_r的函数的区别的是：带_r的函数是线程安全的，r的意思是reentrant，可重入的。
+
+
+1	strtok_rstrtok的函数原型
+编辑
+为char *strtok_r(char *str, const char *delim, char **saveptr);
+strtok_r函数是strtok函数的可重入版本。str为要分解的字符串，delim为分隔符字符串。char **saveptr参数是一个指向char *的指针变量，用来在strtok_r内部保存切分时的上下文，以应对连续调用分解相同源字符串。
+第一次调用strtok_r时，str参数必须指向待提取的字符串，saveptr参数的值可以忽略。连续调用时，str赋值为NULL，saveptr为上次调用后返回的值，不要修改。一系列不同的字符串可能会同时连续调用strtok_r进行提取，要为不同的调用传递不同的saveptr参数。
+strtok_r实际上就是将strtok内部隐式保存的this指针，以参数的形式与函数外部进行交互。由调用者进行传递、保存甚至是修改。需要调用者在连续切分相同源字符串时，除了将str参数赋值为NULL，还要传递上次切分时保存下的saveptr。
+2	strtok_r应用
+编辑
+#include <stdio.h>
+int main(void)
+{
+  int j,in = 0;
+  char buffer[100] = "Fred male 25,John male 62,Anna female 16";
+  char *p[20];
+  char *buf = buffer;
+  char *outer_ptr = NULL;
+  char *inner_ptr = NULL;
+  while ((p[in] = strtok_r(buf, ",", &outer_ptr)) != NULL)
+  {
+    buf = p[in];
+    while ((p[in] = strtok_r(buf, " ", &inner_ptr)) != NULL)
+    {
+      in++;
+      buf = NULL;
+    }
+    buf = NULL;
+  }
+  printf("Here we have %d strings\n", in);
+  for (j = 0; j < in; j++)
+  {
+    printf(">%s<\n", p[j]);
+  }
+  return 0;
+}
