@@ -1,0 +1,67 @@
+GTest中文
+gtest的官方网站是：http://code.google.com/p/googletest/
+一 - 初识gtest
+一、前言
+本篇将介绍一些gtest的基本使用，包括下载，安装，编译，建立我们第一个测试Demo工程，以及编写一个最简单的测试案例。
+二、下载
+如果不记得网址， 直接在google里搜gtest，第一个就是。目前gtest的最新版本为1.3.0，从下列地址可以下载到该最新版本：
+http://googletest.googlecode.com/files/gtest-1.3.0.zip 
+http://googletest.googlecode.com/files/gtest-1.3.0.tar.gz 
+http://googletest.googlecode.com/files/gtest-1.3.0.tar.bz2 
+三、编译
+下载解压后， 里面有个msvc目录：
+  
+使用VS的同学可以直接打开msvc里面的工程文件， 如果你在使用的是VS2005或是VS2008，打开后会提示你升级，升完级后，我们直接编译里面的“gtest”工程，可以直接编过的。
+这里要提醒一下的是，如果你升级为VS2008的工程，那么你的测试Demo最好也是VS2008工程，不然你会发现很郁闷，你的Demo怎么也编不过，我也曾折腾了好久，当时我升级为了VS2008工程，结果我使用VS2005工程建Demo，死活编不过。(这里有人误解了，并不是说只能在VS2008中编译，在VS2005中同样可以。如果要编译VS2005版本，最好保证gtest和你的测试工程都使用VS2005工程。)
+编译之后，在msvc里面的Debug或是Release目录里看到编译出来的gtestd.lib或是gtest.lib文件。
+四、第一个Demo
+下面我们开始建立我们的第一个Demo了，假如之前使用的VS2008编译的gtest，那么，我们在VS2008中，新建一个Win32 Console Application。接着就是设置工程属性，总结如下：
+1.设置gtest头文件路径
+2.设置gtest.lib路径
+3.Runtime Library设置
+ 
+如果是Release版本，Runtime Library设为/MT。当然，其实你也可以选择动态链接（/MD），前提是你之前编译的gtest也使用了同样是/MD选项。
+工程设置后了后，我们来编写一个最简单测试案例试试，我们先来写一个被测试函数：
+int Foo(int a, int b)
+{
+    if (a == 0 || b == 0)
+    {
+        throw "don't do that";
+    }
+    int c = a % b;
+    if (c == 0)
+        return b;
+    return Foo(b, c);
+}
+没错，上面的函数是用来求最大公约数的。下面我们就来编写一个简单的测试案例。
+#include <gtest/gtest.h>
+
+TEST(FooTest, HandleNoneZeroInput)
+{
+    EXPECT_EQ(2, Foo(4, 10));
+    EXPECT_EQ(6, Foo(30, 18));
+}
+上面可以看到，编写一个测试案例是多么的简单。 我们使用了TEST这个宏，它有两个参数，官方的对这两个参数的解释为：[TestCaseName，TestName]，而我对这两个参数的定义是：[TestSuiteName，TestCaseName]，在下一篇我们再来看为什么这样定义。
+对检查点的检查，我们上面使用到了EXPECT_EQ这个宏，这个宏用来比较两个数字是否相等。Google还包装了一系列EXPECT_* 和ASSERT_*的宏，而EXPECT系列和ASSERT系列的区别是：
+    1. EXPECT_*  失败时，案例继续往下执行。
+    2. ASSERT_* 失败时，直接在当前函数中返回，当前函数中ASSERT_*后面的语句将不会执行。
+在下一篇，我们再来具体讨论这些断言宏。为了让我们的案例运行起来，我们还需要在main函数中添加如下代码：
+int _tmain(int argc, _TCHAR* argv[])
+{
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+“testing::InitGoogleTest(&argc, argv);” ：gtest的测试案例允许接收一系列的命令行参数，因此，我们将命令行参数传递给gtest，进行一些初始化操作。gtest的命令行参数非常丰富，在后面我们也会详细了解到。
+“RUN_ALL_TESTS()” ：运行所有测试案例
+OK，一切就绪了，我们直接运行案例试试（一片绿色，非常爽）：
+五、总结
+本篇内容确实是非常的初级，目的是让从来没有接触过gtest的同学了解gtest最基本的使用。gtest还有很多更高级的使用方法，我们将会在后面讨论。总结本篇的内容的话：
+    1. 使用VS编译gtest.lib文件
+    2. 设置测试工程的属性（头文件，lib文件，/MT参数（和编译gtest时使用一样的参数就行了））
+    3. 使用TEST宏开始一个测试案例，使用EXPECT_*,ASSER_*系列设置检查点。
+    4. 在Main函数中初始化环境，再使用RUN_ALL_TEST()宏运行测试案例。
+优点：
+    1. 我们的测试案例本身就是一个exe工程，编译之后可以直接运行，非常的方便。
+    2. 编写测试案例变的非常简单（使用一些简单的宏如TEST），让我们将更多精力花在案例的设计和编写上。
+    3. 提供了强大丰富的断言的宏，用于对各种不同检查点的检查。
+    4. 提高了丰富的命令行参数对案例运行进行一系列的设置。
