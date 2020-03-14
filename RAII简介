@@ -1,0 +1,46 @@
+RAII[1]  （Resource Acquisition Is Initialization）,也称为“资源获取就是初始化”，是C++语言的一种管理资源、避免泄漏的惯用法。C++标准保证任何情况下，已构造的对象最终会销毁，即它的析构函数最终会被调用。简单的说，RAII 的做法是使用一个对象，在其构造时获取资源，在对象生命期控制对资源的访问使之始终保持有效，最后在对象析构的时候释放资源。
+2.5	RAII的分类
+编辑
+根据RAII[2]  对资源的所有权可分为常性类型和变性类型，代表者分别是boost：shared_ptr<>[2]和std：：auto_ptr<>；从所管资源的初始化位置上可分为外部初始化类型和内部初始化类型。
+常性类型是指获取资源的地点是构造函数，释放点是析构函数，并且在这两点之间的一段时间里，任何对该RAII类型实例的操纵都不应该从它手里夺走资源的所有权。变性类型是指可以中途被设置为接管另一个资源，或者干脆被置为不拥有任何资源。外部初始化类型是指资源在外部被创建，并被传给RAII实例的构造函数，后者进而接管了其所有权。boost：shared_ptr<>和std：：auto_ptr<>都是此类型。与之相对的是内部初始化类型。
+其中，常性且内部初始化的类型是最为纯粹的RAII形式，最容易理解，最容易编码。
+2.6	RAII实际应用
+编辑
+每当处理需要配对的获取/释放函数调用的资源时，都应该将资源封装在一个对象中，实现自动资源释放。例如，我们无需直接调用一对非成员函数OpenPort/ClosePort，而是可以考虑定义常性且内部初始化的RAII概念的“端口”操作类：
+class Port{
+public:
+Port(const string& destination);//调用OpenPort
+~Port();//调用ClosePort
+};
+void DoSomething(){
+Port port1(“server1:80”);
+…
+}
+shared_ptr<Port> post2 = /*…*/; //port2在最后一个引用它的
+//shared_ptr离开作用域后关闭
+通过使用上述RAII类型，可以避免程序员忘记关闭端口而引起的泄漏，还可以确保异常发生时栈展开过程中自动释放端口资源。
+2.7	RAII与STL容器
+编辑
+STL容器是基于值语义的，在容器内部，对象是常被复制的。如果RAII类型需要存入STL容器，需要作一些处理。
+class Resource
+{
+public:
+Resource() {/*分配资源*/}
+~ Resource() {/*释放资源*/}
+private:
+int handle;
+};
+std::map< Identifier, Resource > resourceMap;
+以上代码中STL容器对Resource的复制将导致运行期错误。最好的方法是让RAII类型继承于boost::noncopyable[2]，而后在容器中使用引用计数的指针：
+class Resource : public boost::noncopyable
+{
+public:
+Resource() {/*分配资源*/}
+~ Resource() {/*释放资源*/}
+private:
+int handle;
+};
+typedef boost::shared_ptr<Resource> PointerToResourceType;
+typedef std::map< Identifier, PointerToResourceType> ResourceMapType;
+ResourceMapType resourceMap;
+作为替代，还可以使用非拷贝行为的容器：boost::ptr_map<Identifier,Resource> map;
