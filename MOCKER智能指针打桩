@@ -1,0 +1,4 @@
+shared_ptr<xxx> aa = nullptr;
+MOCKER(std::make_shared<xxx>)
+    .stubs()
+    .will(returnValue(aa));
