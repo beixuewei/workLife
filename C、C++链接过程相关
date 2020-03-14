@@ -1,0 +1,119 @@
+dlclose(), dlerror(), dlopen(), dlsym()等：动态链接加载器的编程接口。链接时需要指定-ldl。
+　　1）dlopen()：
+1  // 加载由filename指定的动态库文件，并返回其“句柄”
+2  // 程序中使用dlopen()多次加载同一个库时，返回相同的句柄
+3  // 失败则返回NULL
+4  void *dlopen(const char *filename, int flag);
+　　（1）若filename包含"/"，则认为它是相对路径或绝对路径。否则，动态链接器（ld.so）按如下顺序搜索名为filename的库文件：
+　　I、仅适用于ELF文件（可执行文件+可重定位的目标文件+core文件+共享库）。在ELF文件的动态节（dynamic section）中，当DT_RUNPATH属性没有指定时，使用DT_RPATH属性（如有）指定的目录。如：
+ 
+5  ~/programming/dlopen$ gcc main.c -ldl -Wl,-rpath=.    <——-Wl,-rpath=.：将-rpath=.作为选项传递给链接器
+6  ~/programming/dlopen$ readelf -d a.out
+7  
+8  Dynamic section at offset 0xf04 contains 26 entries:
+9    标记        类型                         名称/值
+10   0x00000001 (NEEDED)           共享库：[libdl.so.2]
+11   0x00000001 (NEEDED)           共享库：[libc.so.6]
+12   0x0000000f (RPATH)            Library rpath: [.]    <——hard code的一个在运行时搜索库文件的路径
+13   0x0000000c (INIT)             0x80483bc
+14   0x0000000d (FINI)             0x8048624
+15  ... ...
+~/programming/dlopen$ chrpath -d a.out               <——chrpath: change the rpath or runpath in binaries
+~/programming/dlopen$ readelf -d a.out
+
+Dynamic section at offset 0xf04 contains 25 entries:
+  标记        类型                         名称/值
+ 0x00000001 (NEEDED)                     共享库：[libdl.so.2]
+ 0x00000001 (NEEDED)                     共享库：[libc.so.6]
+ 0x0000000c (INIT)                       0x80483bc
+ 0x0000000d (FINI)                       0x8048624
+...　　
+ 
+　　不建议使用。
+　　II、程序启动时，如果环境变量LD_LIBRARY_PATH已经定义，则搜索它指定的目录。如：
+16  ~/programming/dlopen$ LD_LIBRARY_PATH=. ./a.out
+17  ~/programming/dlopen$ export LD_LIBRARY_PATH=.
+18  ~/programming/dlopen$ ./a.out
+　　安全起见，对于SUID和SGID程序，这个变量被忽略。
+　　另外，可以调用动态链接器/加载器并指定--library-path选项以覆盖LD_LIBRARY_PATH：
+19  ~/programming/dlopen$ /lib/ld-linux.so.2 --library-path .. ./a.out
+　　III、仅适用于ELF文件。使用ELF文件的DT_RUNPATH动态节属性指定的目录。
+　　IV、检查/etc/ld.so.cache（该文件由ldconfig更新）。它包含那些在ld.so.conf指定目录、/lib和/usr/lib中找到的库文件。
+　　两个相关文件：/lib/ld-linux.so*：动态（运行时）链接器/加载器；/etc/ld.so.conf：它指定的目录被用于搜索库文件。
+　　V、依次搜索/lib和/usr/lib。
+ 　　（2）接下来是dlopen()的第二个参数flag：
+　　I、下面两个值必须选其一：
+　　RTLD_LAZY：延迟绑定（lazy binding）。仅当引用了符号的代码被执行时，才对符号进行解析（resolve）。延迟绑定只适用于函数，变量总是在加载库时被立即绑定。
+　　RTLD_NOW：如果指定了该值，或者环境变量LD_BIND_NOW被设置成非空字符串，则将加载的库的所有未定义符号都在dlopen()返回前被解析。
+　　II、还有以下可选的值：
+　　RTLD_GLOBAL：该库定义的符号可用于后续加载的库的符号解析过程。
+　　解析库的外部（external）引用时，使用该库的依赖列表和其他先前已使用RTLD_GLOBAL打开的库。如果可执行程序链接时使用-rdynamic，则它的全局符号也将被用于解析动态加载库中的引用。
+　　RTLD_LOCAL：与RTLD_GLOBAL相反（也是这两个值中的默认值）。
+　　RTLD_NODELETE（glibc 2.2之后）：在dlclose()期间不卸载（unload）该库。这样的结果是，如果该库在后续被dlopen()重新加载，则它的静态变量不会重新初始化。这个flag不是POSIX.1-2001的标准。
+　　RTLD_NOLOAD（glibc 2.2之后）：不加载。测试该库是否已经加载：如果还没加载则dlopen()返回NULL，否则返回句柄。也可以用来改变已加载库的flag，如一个用RTLD_LOCAL加载的库，可用RTLD_NOLOAD | RTLD_GLOBAL重新打开。这个flag不是POSIX.1-2001的标准。
+　　RTLD_DEEPBIND（glibc 2.3.4之后）：优先在该库内查找符号，而不是在全局范围内。这意味着一个自包含的库将优先使用它自己的符号，而不是其他已加载库的同名全局符号。这个flag不是POSIX.1-2001的标准。
+　　2）dlerror()
+20  // 返回自初始化或上次调用该函数以来，描述dlopen()、dlsym()或dlclose()最近发生的错误的（人可读的）字符串
+// 没有错误则返回NULL
+21  char *dlerror(void);
+　　3）dlsym()
+22  // 返回symbol被加载到内存的地址。若找不到该symbol，则返回NULL
+23  // dlsym()对库的依赖树进行宽度优先遍历，以查找该符号
+24  void *dlsym(void *handle, const char *symbol);
+　　测试是否出现错误的正确方法：调用dlerror()，清除旧的错误条件 -> 调用dlsym() -> 调用dlerror()，检查其返回值是否为NULL。
+　　4）dlclose()：减少动态库句柄handle的引用计数。
+25  int dlclose(void *handle);
+　　dl库维护着库句柄的引用计数。若某个库的引用计数变为0且其他加载的库没有在使用它的符号，则卸载该库。
+       glibc 2.2.3之后，atexit()可用于注册一个退出处理函数，它在库被卸载时自动调用。
+　　5）例子：
+ 
+26  // libfoo.cpp
+27  // extern "C"要求按C语言方式编译该部分代码。若没有这个限定，由于C++的函数重载，foo()的符号名将是_Z3foov
+28  // 此时dlopen.cpp中相应的行也应该改成*(void **) (&foo) = dlsym(handle, "_Z3foov");
+29  extern "C"
+30  {
+31  void foo()
+32  {
+33      cout << "foo() in libfoo" << endl;
+34  }
+35  }
+ 
+ 
+ 
+36  // dlopen.cpp
+37  int main(int argc, char **argv)
+38  {
+39      void (*foo)();
+40  
+41      void *handle = dlopen("libfoo.so", RTLD_LAZY);
+42      if (!handle) 
+43      {
+44          fprintf(stderr, "%s\n", dlerror());
+45          exit(EXIT_FAILURE);
+46      }
+47  
+48      dlerror();    /* Clear any existing error */
+49  
+50      // foo = (void (*)(void)) dlsym(handle, "_Z3foov");这种写法更自然
+51      // 但在C99标准下，从void *到函数指针的转换结果是未定义的
+52      *(void **) (&foo) = dlsym(handle, "foo");
+53  
+54      char *error;
+55      if ((error = dlerror()) != NULL)  
+56      {
+57          fprintf(stderr, "%s\n", error);
+58          exit(EXIT_FAILURE);
+59      }
+60  
+61      (*foo)();
+62      dlclose(handle);
+63      exit(EXIT_SUCCESS);
+64  }
+ 
+　　编译运行：
+65  ~/programming$ g++ -o libfoo.so -shared libfoo.cpp
+66  ~/programming$ sudo mv libfoo.so /usr/lib
+67  ~/programming$ g++ dlopen.cpp -ldl
+68  ~/programming$ ./a.out
+69  foo() in libfoo
+ 
