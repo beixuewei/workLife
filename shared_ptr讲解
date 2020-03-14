@@ -1,0 +1,81 @@
+shared_ptr是一个最像指针的"智能指针"，是boost.smart_ptr库中最有价值、最重要的组成部分，也是最有用的，Boost库的许多组件--甚至还包括其他一些领域的智能指针都使用了shared_ptr。抱歉，我实在想不出什么更恰当的词汇来形容它在软件开发中的重要性。再强调一遍，shared_ptr非常有价值、非常重要、非常有用。
+ 
+	shared_ptr与scoped_ptr一样包装了new操作符在堆上分配的动态对象，但它实现的是引用计数型的智能指针 ，可以被自由地拷贝和赋值，在任意的地方共享它，当没有代码使用（引用计数为0）它时才删除被包装的动态分配的对象。shared_ptr也可以安全地放到标准容器中，并弥补了auto_ptr因为转移语义而不能把指针作为STL容器元素的缺陷。
+	在C++历史上曾经出现过无数的引用计数型智能指针实现，但没有一个比得上boost::shared_ptr，在过去、现在和将来，它都是最好的。
+1.  shared_ptr的线程安全性
+ 
+       shared_ptr 本身不是 100% 线程安全的。它的引用计数本身是安全且无锁的，但对象的读写则不是，因为 shared_ptr 有两个数据成员，读写操作不能原子化。根据文档，shared_ptr 的线程安全级别和内建类型、标准库容器、string 一样，即：
+•	一个 shared_ptr 实体可被多个线程同时读取；
+•	两个的 shared_ptr 实体可以被两个线程同时写入，“析构”算写操作；
+•	如果要从多个线程读写同一个 shared_ptr 对象，那么需要加锁。
+ 
+2.  shared_ptr用法
+ 
+	示例一：
+[cpp] view plain copy
+1.	shared_ptr<int> sp(new int(10));                //一个指向整数的shared_ptr    
+2.	assert(sp.unique());                            //现在shared_ptr是指针的唯一持有者     
+3.	shared_ptr<int> sp2 = sp;                       //第二个shared_ptr,拷贝构造函数     
+4.	assert(sp == sp2 && sp.use_count() == 2);       //两个shared_ptr相等,指向同一个对象,引用计数为2    
+5.	*sp2 = 100;                                     //使用解引用操作符修改被指对象    
+6.	assert(*sp == 100);                             //另一个shared_ptr也同时被修改     
+7.	sp.reset();                                     //停止shared_ptr的使用    
+8.	assert(!sp);                                    //sp不再持有任何指针(空指针)  
+ 
+	示例二：
+[cpp] view plain copy
+1.	class shared                                    //一个拥有shared_ptr的类    
+2.	{    
+3.	private:        
+4.	    shared_ptr<int> p;                          //shared_ptr成员变量    
+5.	public:        
+6.	    shared(shared_ptr<int> p_):p(p_){}          //构造函数初始化shared_ptr        
+7.	    void print()                                //输出shared_ptr的引用计数和指向的值        
+8.	    {          cout << "count:" << p.use_count()                
+9.	    << "v =" <<*p << endl;        
+10.	    }    
+11.	};    
+12.	void print_func(shared_ptr<int> p)                //使用shared_ptr作为函数参数    
+13.	{         
+14.	    //同样输出shared_ptr的引用计数和指向的值        
+15.	    cout << "count:" << p.use_count()            
+16.	        << " v=" <<*p << endl;  }    
+17.	int main()    
+18.	{        
+19.	    shared_ptr<int> p(new int(100));        
+20.	    shared s1(p), s2(p);                        //构造两个自定义类         
+21.	    s1.print();        
+22.	    s2.print();         
+23.	    *p = 20;                                    //修改shared_ptr所指的值        
+24.	    print_func(p);        
+25.	    s1.print();    
+26.	}   
+3. 应用于标准容器
+	有两种方式可以将shared_ptr应用于标准容器（或者容器适配器等其他容器）。
+	一种用法是将容器作为shared_ptr管理的对象，如shared_ptr<list<T> >，使容器可以被安全地共享，用法与普通shared_ptr没有区别，我们不再讨论。
+	另一种用法是将shared_ptr作为容器的元素，如vector<shared_ptr<T> >，因为shared_ptr支持拷贝语义和比较操作，符合标准容器对元素的要求，所以可以实现在容器中安全地容纳元素的指针而不是拷贝。
+	标准容器不能容纳auto_ptr，这是C++标准特别规定的（读者永远也不要有这种想法）。标准容器也不能容纳scoped_ptr，因为scoped_ptr不能拷贝和赋值。标准容器可以容纳原始指针，但这就丧失了容器的许多好处，因为标准容器无法自动管理类型为指针的元素，必须编写额外的大量代码来保证指针最终被正确删除，这通常很麻烦很难实现。
+	存储shared_ptr的容器与存储原始指针的容器功能几乎一样，但shared_ptr为程序员做了指针的管理工作，可以任意使用shared_ptr而不用担心资源泄漏。
+ 
+ 
+	下面的代码示范了将shared_ptr应用于标准容器的用法：
+[cpp] view plain copy
+1.	#include <boost/make_shared.hpp>   
+2.	int main()    
+3.	{        
+4.	    typedef vector<shared_ptr<int> > vs;    //一个持有shared_ptr的标准容器类型        
+5.	    vs v(10);                               //声明一个拥有10个元素的容器，元素被初始化为空指针         
+6.	    int i = 0;        
+7.	    for (vs::iterator pos = v.begin(); pos != v.end(); ++pos)        
+8.	    {            
+9.	        (*pos) = make_shared<int>(++i);     //使用工厂函数赋值            
+10.	        cout << *(*pos) << ", ";            //输出值        
+11.	    }        
+12.	    cout << endl;         
+13.	    shared_ptr<int> p = v[9];        
+14.	    *p = 100;        
+15.	    cout << *v[9] << endl;    
+16.	}   
+ 
+ 
+	这段代码需要注意的是迭代器和operator[]的用法，因为容器内存储的是shared_ptr，我们必须对迭代器pos使用一次解引用操作符*以获得shared_ptr，然后再对shared_ptr使用解引用操作符*才能操作真正的值。*(*pos)也可以直接写成**pos，但前者更清晰，后者很容易让人迷惑。vector的operator[]用法与迭代器类似，也需要使用*获取真正的值。
