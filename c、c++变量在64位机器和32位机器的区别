@@ -1,0 +1,61 @@
+一、数据类型特别是int相关的类型在不同位数机器的平台下长度不同。C99标准并不规定具体数据类型的长度大小，只规定级别。作下比较：
+16位平台
+char         1个字节8位
+short        2个字节16位
+int            2个字节16位
+long         4个字节32位
+指针         2个字节
+32位平台
+char         1个字节8位
+short        2个字节16位
+int            4个字节32位
+long         4个字节
+long long 8个字节
+指针         4个字节
+64位平台
+char         1个字节
+short        2个字节
+int            4个字节
+long         8个字节（区别）
+long long 8个字节
+指针        8个字节（区别）
+二、编程注意事项
+为了保证平台的通用性，程序中尽量不要使用long数据库型。可以使用固定大小的数据类型宏定义，这些宏定义需要引用stdint.h头文件：
+typedef signed char       int8_t
+typedef short int             int16_t;
+typedef int                      int32_t;
+# if __WORDSIZE == 64
+typedef long int              int64_t;
+# else
+__extension__
+typedef long long int      int64_t;
+#endif
+三、使用int时也可以使用intptr_t来保证平台的通用性，它在不同的平台上编译时长度不同，但都是标准的平台字长，比如64位机器它的长度就是8字节，32位机器它的长度是4字节，使用它可以安全地进行整数与指针的转换运算，也就是说当需要将指针作为整数运算时，将它转换成intptr_t进行运算才是安全的。intptr_t需要引用stddef.h头文件，它的定义如下：
+#if __WORDSIZE == 64
+typedef long int                intptr_t;
+#else
+typedef int                        intptr_t;
+#endif
+编程中要尽量使用sizeof来计算数据类型的大小
+以上类型定义都有相应的无符号类型。
+四、使用ssize_t和size_t
+它们分别是unsigned和signed size of computer word size。它们也是表示计算机的字长，在32位机器上是int型，在64位机器上long型。使用它们对于增加平台的通用性有很大好处，从某种意义上来说它们等同于intptr_t和uintptr_t。使用它们也需要引用stddef.h头文件。
+五、socket的accept函数在有些操作系统上使用size_t是不正确的，因为accept接收的int*类型，而size_t的长度可能会超过int*的长度限制，导致错误。后来BSD使用sock_t来替代它。
+
+
+可以通过 pthread_create()函数创建新线程。
+
+#include <pthread.h>
+int pthread_create(pthread_t *restrict tidp,
+                              const pthread_attr_t *restrict attr,
+                              void *(*start_rtn)(void *),
+                              void *restrict arg);
+返回值：
+若成功，返回0；否则，返回错误编码
+
+参数说明：
+
+tidp：新创建的线程ID会被设置成tidp指向的内存单元。
+attr：用于定制各种不能的线程属性，默认为NULL
+start_rtn：新创建的线程从start_rtn函数的地址开始运行，该函数只有一个void类型的指针参数即arg，如果start_rtn需要多个参数，可以将参数放入一个结构中，然后将结构的地址作为arg传入。
+pthread函数在调用失败后通常会返回错误码，但不会设置errno
