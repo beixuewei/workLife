@@ -1,0 +1,6 @@
+ut这样写，把需要变public的头文件放进来
+#ifndef private
+#define private public
+#define protected public
+#include "xxx.h"
+#endif
