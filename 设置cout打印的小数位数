@@ -1,0 +1,3 @@
+#include <iomanip>
+cout << setiosflags(ios::fixed) << setprecision(10);	//保留到小数点后10位
+cout << resetiosflags(ios::fixed);					//取消
