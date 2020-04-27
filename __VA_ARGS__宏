@@ -1,3 +1,17 @@
 https://www.cnblogs.com/zhujudah/archive/2012/03/22/2411240.html
 __VA_ARGS__ 是一个可变参数的宏，很少人知道这个宏，这个可变参数的宏是新的C99规范中新增的，目前似乎只有gcc支持（VC6.0的编译器不支持）。
-实现思想就是宏定义中参数列表的最后一个参数为省略号（也就是三个点）。这样预定义宏_ _VA_ARGS_ _就可以被用在替换部分中，替换省略号所代表的字符串。
+实现思想就是宏定义中参数列表的最后一个参数为省略号（也就是三个点）。这样预定义宏_ _VA_ARGS_ _就可以被用在替换部分中，替换省略号所代表的字符串。比如：
+
+#define PR(...) printf(__VA_ARGS__)
+int main()
+{
+    int wt=1,sp=2;
+    PR("hello\n");
+    PR("weight = %d, shipping = %d",wt,sp);
+    return 0;
+}
+输出结果：
+hello
+weight = 1, shipping = 2
+省略号只能代替最后面的宏参数。
+#define W(x,...,y)错误！
