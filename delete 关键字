@@ -1,0 +1,3 @@
+https://www.cnblogs.com/xinxue/p/5503836.html
+delete 关键字
+  C++11 中，可在想要 “禁止使用” 的特殊成员函数声明后加 “= delete”，而需要保留的加 "= default" 或者不采取操作
