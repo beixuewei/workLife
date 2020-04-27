@@ -1,0 +1,16 @@
+1. 执行 ulimit -a
+ulimit -c unlimited
+2. 执行./test
+3. ./gdb test core
+执行后生成一个core文件
+
+gdb运行后的命令
+bt			
+info threads	显示所有线程
+thread 1		查看1号线程
+thread 2
+
+q	退出gdb
+退出后重新打开core文件：	./gdb ./ core		，即gdb需要两个参数
+gdb程序名(包含路径) core*（core文件名和路径）
+跳转到指定的#行信息，用命令f：  frame 行号，或者f 行号
