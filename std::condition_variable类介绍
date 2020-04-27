@@ -1,0 +1,35 @@
+https://www.2cto.com/kf/201506/411327.html
+头文件主要包含了与条件变量相关的类和函数。相关的类包括 std::condition_variable和 std::condition_variable_any，还有枚举类型std::cv_status。另外还包括函数 std::notify_all_at_thread_exit()，下面分别介绍一下以上几种类型。
+
+std::condition_variable 类介绍
+std::condition_variable是条件变量，更多有关条件变量的定义参考维基百科。Linux下使用 Pthread库中的 pthread_cond_*() 函数提供了与条件变量相关的功能， Windows 则参考 MSDN。
+当 std::condition_variable对象的某个wait 函数被调用的时候，它使用 std::unique_lock(通过 std::mutex) 来锁住当前线程。当前线程会一直被阻塞，直到另外一个线程在相同的 std::condition_variable 对象上调用了 notification 函数来唤醒当前线程。
+std::condition_variable 对象通常使用 std::unique_lock 来等待，如果需要使用另外的 lockable 类型，可以使用std::condition_variable_any类，本文后面会讲到 std::condition_variable_any 的用法。
+
+好了，对条件变量有了一个基本的了解之后，我们来看看 std::condition_variable 的各个成员函数。
+std::condition_variable 的拷贝构造函数被禁用，只提供了默认构造函数。
+
+std::condition_variable::wait() 介绍:
+std::condition_variable提供了两种 wait() 函数。当前线程调用 wait() 后将被阻塞(此时当前线程应该获得了锁（mutex），不妨设获得锁 lck)，直到另外某个线程调用 notify_* 唤醒了当前线程。
+在线程被阻塞时，该函数会自动调用 lck.unlock() 释放锁，使得其他被阻塞在锁竞争上的线程得以继续执行。另外，一旦当前线程获得通知(notified，通常是另外某个线程调用 notify_* 唤醒了当前线程)，wait()函数也是自动调用 lck.lock()，使得lck的状态和 wait 函数被调用时相同。
+在第二种情况下（即设置了 Predicate），只有当 pred 条件为false 时调用 wait() 才会阻塞当前线程，并且在收到其他线程的通知后只有当 pred 为 true 时才会被解除阻塞。
+
+std::condition_variable::wait_for() 介绍
+与std::condition_variable::wait() 类似，不过 wait_for可以指定一个时间段，在当前线程收到通知或者指定的时间 rel_time 超时之前，该线程都会处于阻塞状态。而一旦超时或者收到了其他线程的通知，wait_for返回，剩下的处理步骤和 wait()类似。
+另外，wait_for 的重载版本的最后一个参数pred表示 wait_for的预测条件，只有当 pred条件为false时调用 wait()才会阻塞当前线程，并且在收到其他线程的通知后只有当 pred为 true时才会被解除阻塞，
+
+std::condition_variable::wait_until 介绍
+与 std::condition_variable::wait_for 类似，但是wait_until可以指定一个时间点，在当前线程收到通知或者指定的时间点 abs_time超时之前，该线程都会处于阻塞状态。而一旦超时或者收到了其他线程的通知，wait_until返回，剩下的处理步骤和 wait_until() 类似。
+另外，wait_until的重载版本的最后一个参数 pred表示 wait_until 的预测条件，只有当 pred条件为 false时调用 wait()才会阻塞当前线程，并且在收到其他线程的通知后只有当pred为 true时才会被解除阻塞，
+
+std::condition_variable::notify_one() 介绍
+唤醒某个等待(wait)线程。如果当前没有等待线程，则该函数什么也不做，如果同时存在多个等待线程，则唤醒某个线程是不确定的(unspecified)。
+
+std::condition_variable::notify_all() 介绍
+唤醒所有的等待(wait)线程。如果当前没有等待线程，则该函数什么也不做。
+
+std::condition_variable_any 介绍
+与 std::condition_variable类似，只不过std::condition_variable_any的 wait 函数可以接受任何 lockable参数，而 std::condition_variable只能接受 std::unique_lock类型的参数，除此以外，和std::condition_variable几乎完全一样。
+std::cv_status枚举类型介绍
+cv_status::no_timeout wait_for 或者wait_until没有超时，即在规定的时间段内线程收到了通知。
+
