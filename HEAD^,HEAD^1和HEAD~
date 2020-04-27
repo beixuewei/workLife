@@ -1,0 +1,10 @@
+https://www.cnblogs.com/softidea/p/4967607.html
+HEAD^,HEAD^1和HEAD~三个表达式都是代表了HEAD的父提交
+reset <commit>的时候，HEAD不变，但是HEAD指向的引用值会变成相应的<commit>值；checkout <commit>的时候，HEAD直接变成<commit>值，但原来引用中保存的值不变。
+
+“^”代表父提交,当一个提交有多个父提交时，可以通过在”^”后面跟上一个数字，表示第几个父提交，”^”相当于”^1”.
+~<n>相当于连续的<n>个”^”.
+checkout只会移动HEAD指针，reset会改变HEAD的引用值。
+
+git reset –hard changId 命令会改变master和HEAD
+git checkout changId仅仅改变HEAD
