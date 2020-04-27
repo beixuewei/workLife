@@ -14,3 +14,7 @@ q	退出gdb
 退出后重新打开core文件：	./gdb ./ core		，即gdb需要两个参数
 gdb程序名(包含路径) core*（core文件名和路径）
 跳转到指定的#行信息，用命令f：  frame 行号，或者f 行号
+
+
+gdb设置断点
+https://blog.csdn.net/yangzhongxuan/article/details/6901477
