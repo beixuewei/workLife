@@ -1,0 +1,7 @@
+https://blog.csdn.net/a794226986/article/details/18605903
+
+CMake中有一个变量CMAKE_BUILD_TYPE，可以取值枚举入下：Debug   Release  RelWithDebInfo  和  MinSizeRel
+	
+当这个变量值为Debug的时候，Cmake会使用变量CMAKE_FLAGS_DEBUG 和 CMAKE_C_FLAGS_DEBUG中的字符串作为编译选项生成Makefile，
+
+当这个变量值为Release的时候，工程会使用变量CMAKE_CXX_FLAGS_RELEASE和CMAKE_CFLAGS_RELEASE选项生成Makefile。
