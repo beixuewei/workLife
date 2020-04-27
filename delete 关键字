@@ -1,3 +1,10 @@
 https://www.cnblogs.com/xinxue/p/5503836.html
 delete 关键字
   C++11 中，可在想要 “禁止使用” 的特殊成员函数声明后加 “= delete”，而需要保留的加 "= default" 或者不采取操作
+
+在谷歌 C++ 编码规范中，使用了一个宏定义来简化，如下所示：
+// A macro to disallow the copy constructor and operator= functions 
+// This should be used in the priavte:declarations for a class
+#define    DISALLOW_COPY_AND_ASSIGN(TypeName) \
+    TypeName(const TypeName&);                \
+TypeName& operator=(const TypeName&)
