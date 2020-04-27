@@ -1,0 +1,26 @@
+https://www.cnblogs.com/batman425/p/3179520.html
+
+要读写二进制数据块，使用成员函数read()和write()成员函数，它们原型如下：
+
+　　read(unsigned char *buf,int num);
+　　write(const unsigned char *buf,int num);
+
+read()从文件中读取 num 个字符到 buf 指向的缓存中，如果在还未读入 num 个字符时就到了文件尾，可以用成员函数 int gcount();来取得实际读取的字符数;而 write() 从buf 指向的缓存写 num 个字符到文件中，值得注意的是缓存的类型是 unsigned char *，有时可能需要类型转换。
+
+vector<类型名> buffer;
+ifstream input;
+input.open(file, ios::in);
+if(!input) {
+  std::cout << "open file failed: " << file << endl;
+}
+input.seekg(0, input.end); // 移动读写指针到末尾
+int size = input.tellg(); // 计算文件开头到读写指针处的长度
+input.seekg(0, input.beg);
+int num = size / sizeof(类型名);
+
+buffer.resize(num);
+input.read(reinterpret_cast<char*>(buffer.data()), sizeof(类型名) * num);
+input.close();
+
+
+write的用法同read
