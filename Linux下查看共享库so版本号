@@ -1,0 +1,6 @@
+http://blog.sina.com.cn/s/blog_663457ed01016yes.html
+
+md5sum 文件名
+上面的md5sum命令可以计算指定文件的md5值
+
+使用readelf -a ***.so读取出文件的版本号，不过此时只能读取到主版本号，version：1
