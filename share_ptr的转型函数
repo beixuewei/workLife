@@ -1,0 +1,2 @@
+http://www.51testing.com/html/41/n-823741.html
+share_ptr的转型函数不能使用c++常用的转型函数，即static_cast，dynamic_cast，const_cast，而要使用static_pointer_cast，dynamic_pointer_cast，const_pointer_cast。
