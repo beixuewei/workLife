@@ -1,0 +1,4 @@
+启动服务
+systemctl start xxx.service
+停止服务
+systemctl stop xxx.service
