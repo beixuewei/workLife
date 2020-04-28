@@ -14,3 +14,5 @@
 -fsanitize-recover=address,all：
 export ASAN_OPTIONS=halt_on_error=0
 以上两个选项同时使用，表示出现错误后继续运行
+
+.mk文件中，LOCAL_CFLAGS和LOCAL_LDFLAGS都要把上面的选项加进去
