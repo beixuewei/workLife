@@ -1,0 +1,7 @@
+1. 查看发布版本号 
+ 　  cat /etc/issue 
+　　 
+　   lsb_release -a 
+　　 
+ 2. 查看内核版本号
+　   uname -a
