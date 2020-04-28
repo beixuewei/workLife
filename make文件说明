@@ -1,0 +1,38 @@
+https://blog.csdn.net/winceos/article/details/37814705
+关于make文件的说明
+1  Android 源码中包含了许多的模块，模块的类型有很多种，例如：Java 库，C/C++ 库，APK 应用，以及可执行文件等 。并且，Java 或者 C/C++ 库还可以分为静态的或者动态的，库或可执行文件既可能是针对设备（本文的“设备”指的是 Android 系统将被安装的设备，例如某个型号的手机或平板）的也可能是针对主机（本文的“主机”指的是开发 Android 系统的机器，例如装有 Ubuntu 操作系统的 PC 机或装有 MacOS 的 iMac 或 Macbook）的。不同类型的模块的编译步骤和方法是不一样，为了能够一致且方便的执行各种类型模块的编译，在 config.mk 中定义了许多的常量，这其中的每个常量描述了一种类型模块的编译方式，这些常量有：
+•	BUILD_HOST_STATIC_LIBRARY
+•	BUILD_HOST_SHARED_LIBRARY
+•	BUILD_STATIC_LIBRARY
+•	BUILD_SHARED_LIBRARY
+•	BUILD_EXECUTABLE
+•	BUILD_HOST_EXECUTABLE
+•	BUILD_PACKAGE
+•	BUILD_PREBUILT
+•	BUILD_MULTI_PREBUILT
+•	BUILD_HOST_PREBUILT
+•	BUILD_JAVA_LIBRARY
+•	BUILD_STATIC_JAVA_LIBRARY
+•	BUILD_HOST_JAVA_LIBRARY
+2  通过名称大概就可以猜出每个变量所对应的模块类型。（在模块的 Android.mk 文件中，只要包含进这里对应的常量便可以执行相应类型模块的编译。对于 Android.mk 文件的编写请参见后文：“添加新的模块”。）
+3  这些常量的值都是另外一个 Make 文件的路径，详细的编译方式都是在对应的 Make 文件中定义的。这些常量和 Make 文件的是一一对应的，对应规则也很简单：常量的名称是 Make 文件的文件名除去后缀全部改为大写然后加上“BUILD_”作为前缀。例如常量 BUILD_HOST_PREBUILT 的值对应的文件就是 host_prebuilt.mk。
+4  这些 Make 文件的说明如表 3 所示：
+
+表 3. 各种模块的编译方式的定义文件
+文件名	说明
+host_static_library.mk	定义了如何编译主机上的静态库。
+host_shared_library.mk	定义了如何编译主机上的共享库。
+static_library.mk	定义了如何编译设备上的静态库。
+shared_library.mk	定义了如何编译设备上的共享库。
+executable.mk	定义了如何编译设备上的可执行文件。
+host_executable.mk	定义了如何编译主机上的可执行文件。
+package.mk	定义了如何编译 APK 文件。
+prebuilt.mk	定义了如何处理一个已经编译好的文件 ( 例如 Jar 包 )。
+multi_prebuilt.mk	定义了如何处理一个或多个已编译文件，该文件的实现依赖 prebuilt.mk。
+host_prebuilt.mk	处理一个或多个主机上使用的已编译文件，该文件的实现依赖 multi_prebuilt.mk。
+java_library.mk	定义了如何编译设备上的共享 Java 库。
+static_java_library.mk	定义了如何编译设备上的静态 Java 库。
+host_java_library.mk	定义了如何编译主机上的共享 Java 库。
+
+
+5  不同类型的模块的编译过程会有一些相同的步骤，例如：编译一个 Java 库和编译一个 APK 文件都需要定义如何编译 Java 文件。因此，表 3 中的这些 Make 文件的定义中会包含一些共同的代码逻辑。为了减少代码冗余，需要将共同的代码复用起来，复用的方式是将共同代码放到专门的文件中，然后在其他文件中包含这些文件的方式来实现的。
