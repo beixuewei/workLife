@@ -1,0 +1,40 @@
+https://blog.csdn.net/shift_wwx/article/details/78742459
+
+例如：
+typedef std::unique_ptr<std::unordered_map<std::string, std::string>> UPtrMapSS;
+而C++11中：
+using UPtrMapSS = std::unique_ptr<std::unordered_map<std::string, std::string>>;
+或许从这个例子中，我们是看不出来明显的好处的（而于我来说，以一个第三者的角度，这个例子也难以说服我一定要用C++11的using）。
+再来看下：
+typedef void (*FP) (int, const std::string&);
+若不是特别熟悉函数指针与typedef的童鞋，我相信第一眼还是很难指出FP其实是一个别名，代表着的是一个函数指针，而指向的这个函数返回类型是void，接受参数是int, const std::string&。那么，让我们换做C++11的写法：
+
+using FP = void (*) (int, const std::string&);
+我想，即使第一次读到这样代码，并且知道C++11 using的童鞋也能很容易知道FP是一个别名，using的写法把别名的名字强制分离到了左边，而把别名指向的放在了右边，比较清晰。
+
+
+而针对这样的例子，我想我可以再补充一个例子：
+
+1.	typedef std::string (Foo::* fooMemFnPtr) (const std::string&);
+2.	 
+3.	using fooMemFnPtr = std::string (Foo::*) (const std::string&);
+从可读性来看，using也是要好于typedef的。
+
+那么，若是从可读性的理由支持using，力度也是稍微不足的。来看第二个理由，那就是举出了一个typedef做不到，而using可以做到的例子：alias templates, 模板别名。
+
+1.	template <typename T>
+2.	using Vec = MyVector<T, MyAlloc<T>>;
+3.	 
+4.	// usage
+5.	Vec<int> vec;
+这一切都会非常的自然。
+
+
+那么，若你使用typedef来做这一切：
+
+1.	template <typename T>
+2.	typedef MyVector<T, MyAlloc<T>> Vec;
+3.	 
+4.	// usage
+5.	Vec<int> vec;
+当你使用编译器编译的时候，将会得到类似：error: a typedef cannot be a template的错误信息。
