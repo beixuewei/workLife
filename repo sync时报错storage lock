@@ -1,0 +1,3 @@
+解决办法：删除.git-credentials.lock文件
+
+导致问题的操作；在~目录执行过repo init
