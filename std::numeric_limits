@@ -1,0 +1,4 @@
+C++ 工具库 类型支持 std::numeric_limits 
+定义于头文件 <limits>
+template< class T > class numeric_limits;
+numeric_limits 类模板提供查询各种算术类型属性的标准化方式（例如 int 类型的最大可能值是 std::numeric_limits<int>::max() ）。
