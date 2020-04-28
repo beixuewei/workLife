@@ -1,0 +1,65 @@
+getParam函数有一个布尔类型的返回值，可以通过它来表示是否获取参数成功
+
+访问私有名称
+•	解决方案就是在实例化NodeHandle时候使用私有名称作为工作空间。
+ros::init(argc, argv, "my_node_name");
+ros::NodeHandle nh1("~");
+ros::NodeHandle nh2("~foo");
+•	nh1的命名空间是 /my_node_name, and nh2的命名空间是/my_node_name/foo.
+
+•	代码：
+ros::Timer timer1 = n.createTimer(ros::Duration(0.1), callback1);
+ros::Timer timer2 = n.createTimer(ros::Duration(1.0), callback2);
+•	增加两个定时器，一个100毫秒执行一次，一个1秒执行一次。
+
+•	在Fuerte版本之前，列表参数只能通过XmlRpc::XmlRpcValue类获取
+•	代码示例：
+XmlRpc::XmlRpcValue my_list;
+nh.getParam("my_list", my_list);
+ROS_ASSERT(my_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
+
+for (int32_t i = 0; i < my_list.size(); ++i) 
+{
+  ROS_ASSERT(my_list[i].getType() == XmlRpc::XmlRpcValue::TypeDouble);
+  sum += static_cast<double>(my_list[i]);
+}
+
+
+•	创建定时器
+•	通过ros::NodeHandle::createTimer()方法创建
+•	代码示例：
+ros::Timer timer = nh.createTimer(ros::Duration(0.1), timerCallback);
+•	createTimer()方法有多种不同的形式，可以让你指定不同的参数项和回调函数类型
+•	一般用法：
+ros::Timer ros::NodeHandle::createTimer(ros::Duration period, <callback>, bool oneshot = false);
+•	函数说明：
+o	period ，这是调用定时器回调函数时间间隔。例如，ros::Duration(0.1)，即每十分之一秒执行一次
+o	，回调函数，可以是函数，类方法，函数对象。
+o	oneshot ，表示是否只执行一次，如果已经执行过，还可以通过stop()、setPeriod(ros::Duration)和start()来规划再执行一次。
+•	回调函数用法
+•	回调函数用法：
+void callback(const ros::TimerEvent&);
+•	ros::TimerEvent结构体作为参数传入，它提供时间的相关信息，对于调试和配置非常有用
+•	ros::TimerEvent结构体说明：
+o	ros::Time last_expected 上次回调期望发生的时间
+o	ros::Time last_real 上次回调实际发生的时间
+o	ros::Time current_expected 本次回调期待发生的时间
+o	ros::Time current_real 本次回调实际发生的时间
+o	ros::WallTime profile.last_duration 上次回调的时间间隔（结束时间-开始时间），是wall-clock时间。
+
+
+命名空间
+•	查阅ROS命名空间文档
+•	NodeHandle可以指定命名空间给构造器：
+ros::NodeHandle nh("my_namespace");
+•	这使得任何相对名称可用，NodeHandle相对于<node_namespace>/my_namespace而不是 <node_namespace>。
+•	也可以指定父NodeHandle和命名空间：
+ros::NodeHandle nh1("ns1");
+ros::NodeHandle nh2(nh1, "ns2");
+•	这个放nh2 进入<node_namespace>/ns1/ns2 命名空间.
+
+
+ros::NodeHandle nh("~my_private_namespace");
+ros::Subscriber sub = nh.subscribe("my_private_topic", ...);
+•	上面的例子会订阅<node_name>/my_private_namespace/my_private_topic
+
