@@ -1,0 +1,12 @@
+https://www.jianshu.com/p/6e3c189c4995
+
+git checkout dest_branch
+1、git log  查找需要合并commit_id
+2、git cherry-pick commit_id
+3、如果有冲突，则修改文件 vim xxx.cpp，然后：
+git add xxx.cpp
+git cherry-pick --continue
+
+
+git cherry-pick与git fetch一起使用:
+git fetch some_change_id && git cherry-pick FETCH_HEAD
