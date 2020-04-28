@@ -63,3 +63,11 @@ ros::NodeHandle nh("~my_private_namespace");
 ros::Subscriber sub = nh.subscribe("my_private_topic", ...);
 •	上面的例子会订阅<node_name>/my_private_namespace/my_private_topic
 
+
+
+用source命令来切换不同版本的ROS
+例如：source /opt/x86/ros/kinetic/setup.bash
+
+用rosbag record命令时报错时：
+需要用命令设置一下  rosparam set use_sim_time false
+记录完bag之后在  rosparam set use_sim_time true
