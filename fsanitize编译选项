@@ -1,0 +1,16 @@
+地址消毒的使用：
+1、编译链接被测代码时，增加编译选项（可能需要额外链接so文件）
+2、运行程序前，设置环境变量 export ASAN_OPTIONS=halt_on_error=0:log_path=xxx，表示出现错误继续运行
+
+-fgnu89-inline：兼容不带static的inline函数
+-fno-stack-protector：关闭栈保护，使用asan不需要该功能，且有些交叉编译器上没有实现相应功能
+-fno-omit-frame-pointer：得到较好的栈打印信息
+-O0：防止地址消毒代码被优化掉
+
+实际使用时基本使用以下编译选项：
+-fsanitize=address：地址消毒，用于发现栈、全局变量读写溢出、返回后使用、释放后使用等问题（必选）
+-fsanitize=leak：用于发现内存泄漏问题（必选）
+-fsanitize=undefined：用于发现未定义行为（必选）
+-fsanitize-recover=address,all：
+export ASAN_OPTIONS=halt_on_error=0
+以上两个选项同时使用，表示出现错误后继续运行
