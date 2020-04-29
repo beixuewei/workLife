@@ -1,0 +1,6 @@
+在linux下，用命令 nm –C xxx.so 
+
+或者c++filt命令，例如
+
+[taoge@localhost test]$ c++filt _ZNK4Json5ValueixEPKc
+Json::Value::operator[](char const*) const
