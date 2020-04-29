@@ -1,4 +1,5 @@
 在linux下，用命令 nm –C xxx.so 
+nm是指 name mangling，名字重编
 
 或者c++filt命令，例如
 
