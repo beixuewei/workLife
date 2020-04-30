@@ -1,0 +1,9 @@
+-u[<mode>], --untracked-files[=<mode>]
+Show untracked files.
+The mode parameter is optional (defaults to all), and is used to specify the handling of untracked files.
+The possible options are:
+·   no - Show no untracked files.
+·   normal - Shows untracked files and directories.
+·   all - Also shows individual files in untracked directories.
+
+-u 选项，Show no untracked files 不显示未跟踪文件
