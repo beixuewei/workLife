@@ -1,0 +1,8 @@
+x命令格式：x/[count][format][size] address 
+size可以是b(byte), h(halfword), w(word), g(giant, 8 bytes)
+
+(gdb)x/10ub ptr 
+按无符号整形从ptr所指地址开始输出10字节
+
+(gdb)x/5xw ptr 
+按16进制从ptr所指地址开始输出5个字（10字节）
