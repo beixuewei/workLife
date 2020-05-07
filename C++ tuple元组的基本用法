@@ -1,0 +1,9 @@
+https://blog.csdn.net/sevenjoin/article/details/88420885
+
+std::make_tuple // 构造tuple
+std::get<ith>(tup) // 获取tup的第ith个元素
+std::forward_as_tuple // 用变量的引用来构造tuple
+std::tuple_cat(tup1, tup2) // 连接2个tuple，生成1个新的tuple
+std::tuple_element<ith, decltype(tup)>::type val // 声明一个变量val，它的类型根据tup的第ith个元素进行推导
+std::tuple_size<decltype(tup)>::value // 得到tup中的元素个数
+std::tie(val1, std::ignore, val3) = tuple // 解包tuple中的内容，然后把第0个元素赋值给val1，第2个元素赋值给val3，第1个元素忽略
