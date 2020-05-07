@@ -1,0 +1,12 @@
+https://blog.csdn.net/qccz123456/article/details/80447512
+
+overload重载；override重写/覆盖；redefine重定义/隐藏
+
+Base *pb = new Derived();
+pb->func();
+
+问题：此时究竟调用的是基类还是派生类中的func函数？
+解：
+1、首先明确是override重写还是redefine重定义：
+重写，要求派生类的func函数声明与基类一致，且基类的func函数前面带有virtual关键字，否则就不是重写，而是重定义；
+2、如果是重写，那么会调用派生类中的func函数（多态），否则调用的是基类的func函数
