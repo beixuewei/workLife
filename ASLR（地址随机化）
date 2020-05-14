@@ -1,0 +1,12 @@
+https://www.jianshu.com/p/fa72a327a2ba
+
+echo 0 >/proc/sys/kernel/randomize_va_space
+
+0 - 表示关闭进程地址空间随机化。
+1 - 表示将mmap的基址，stack和vdso页面随机化。
+2 - 表示在1的基础上增加栈（heap）的随机化。
+
+作者：Zero_0_0
+链接：https://www.jianshu.com/p/fa72a327a2ba
+来源：简书
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
