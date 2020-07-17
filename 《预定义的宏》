@@ -1,0 +1,27 @@
+标准的预定义的标识符
+编译器支持 ISO C99 和 ISO C + + 11 中指定此预定义的标识符。
+__func__ 为函数本地将封闭函数的未限定和未修饰名称 static``const 数组 char 。
+
+标准预定义的宏
+编译器支持 ISO C99 和 ISO C + + 14 标准所指定的这些预定义的宏。
+__cplusplus 翻译单元将作为 c + + 编译时定义为整数文字值。 否则，未定义。
+__DATE__ 当前源文件的编译日期。 日期是一个固定长度的字符串文字的窗体 Mmm dd yyyy。 月份名称 Mmm 等同
+于中的缩写的月份名称生成的 C 运行库日期 asctime (https://msdn.microsoft.com/zh-cn/library/kys1801b.aspx)
+函数。 日期的第一个字符 dd 是一个空间，如果值是小于 10。 始终定义此宏。
+__FILE__ 当前源文件的名称。 __FILE__ 扩展到字符的字符串文字。 若要确保显示该文件的完整路径，请使用 /FC （完
+整路径的源代码文件中诊断程序） (https://msdn.microsoft.com/zh-cn/library/027c4t2s.aspx)。 始终定义此宏。
+__LINE__ 定义为当前源文件中的整数行号。 值 __LINE__ 宏可通过使用更改 #line 指令。 始终定义此宏。
+__STDC__ 定义为 1，仅当作为 C 编译，如果 /Za (https://msdn.microsoft.com/zh-cn/library/0k0w269d.aspx) 指
+定编译器选项。 否则，未定义。
+__STDC_HOSTED__ 定义为 1，如果实现是 承载实现, ，属于支持整个所需的标准库的支持。 否则，定义为 0。
+__STDCPP_THREADS__ 定义为 1，当且仅当一个程序可以有多个线程的执行，并且编译为 c + +。 否则，未定义。
+__TIME__ 预处理过的翻译单元的转换的时间。 时间是字符的字符串文字的窗体 ︰ 分︰ 秒, ，由 C 运行时库返回的时
+间相同 asctime (https://msdn.microsoft.com/zh-cn/library/kys1801b.aspx) 函数。 始终定义此宏。
+
+测试代码：
+#include <stdio.h>
+int main()
+{
+printf("__func__=%s\n__cplusplus=%d\n__DATE__=%s\n__FILE__=%s\n__LINE__=%d\n__TIME__=%s\n",__func__,__cplusplus,__DATE__,__FILE__,__LINE__,__TIME__);
+return 0;
+}
