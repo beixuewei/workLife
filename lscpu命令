@@ -1,0 +1,5 @@
+socket就是主板上插cpu的槽的数目，也就是可以插入的物理CPU的个数。
+core就是我们平时说的“核“，每个物理CPU可以双核，四核等等。
+thread就是每个core的硬件线程数，即超线程。
+
+Thread(s) per core大于1，说明没有关超线程
