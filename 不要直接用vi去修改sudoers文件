@@ -1,0 +1,9 @@
+不要直接用vi去修改 /etc/sudoers文件
+
+修改sudoers文件导致所有用户使用sudo命令出现如下错误“>>>/etc/sudoers:syntax error near line 23”
+
+解决办法：
+输入命令visudo，回车
+编辑好后ctrl+x，提示是否保存，输入Y
+出现提示保存到/etc/sudoers.tmp，直接回车，不要修改文件名。
+提示是否覆盖，输入Y
