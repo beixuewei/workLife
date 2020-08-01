@@ -1,0 +1,20 @@
+在arm64上编译log4cxx报错，按照提示信息的网址把configure.guess和configure.sub复制过来，重新编译还是报错
+解决办法：
+参考log4cpp的Linux环境下的编译安装
+https://blog.csdn.net/u010275850/article/details/80605326
+※在使用log4cpp自带的config.sub和config.guess文件交叉编译时可能会存在某些平台不能识别，此时需要使用三方的config文件。
+① apt-get install libtool
+将libtool目录下的config.guess和config.sub拷贝到log4cpp的config目录下：
+② cp /usr/share/libtool/build-aux/config.guess /usr/share/libtool/build-aux/config.sub ./log4cpp-1.1.3/log4cpp/config
+log4cxx依赖于libapr和libaprutil库，需要先行安装
+
+pcl依赖下面4个库：boost、Eigen、FLANN、VTK
+
+https://blog.csdn.net/fhxpp_27/article/details/8280024
+参考网上，安装了apr-1.5.2和apr-util-1.5.4
+用命令
+./configure
+make
+make install
+进行安装
+安装apr-util时要用./configure –with-apr=/usr/local/apr  来指定apr的路径
