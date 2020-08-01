@@ -1,0 +1,9 @@
+https://blog.csdn.net/zhangzq86/article/details/52982939
+dllimport，dllexport：
+格式：
+__declspec( dllimport ) declarator
+__declspec( dllexport ) declarator
+分别用来从dll导入函数，数据，或对象以及从dll中导出函数，数据，或对象。相当于定义了dll的接口，为它的客户exe或dll定义可使用的函数，数据，或对象。
+将函数声明成dllexport就可以免去定义模块定义(.DEF)文件。
+dllexport代替了__export关键字。
+被声明为dllexport的C++函数导出时的函数名将会按照C++规则经过处理。如果要求不按照C++规则进行名字处理，请使用.def文件或使用extern "C"。
