@@ -1,0 +1,16 @@
+https://blog.csdn.net/adrian169/article/details/8953509
+ifstream fin("input.txt");
+　　现在读入前四行. 你还记得怎么用"<<" 操作符往流里插入变量和符号吧？好,?在 "<<" (插入)?操作符之后，是">>" (提取) 操作符. 使用方法是一样的. 看这个代码片段.
+int number;
+float real;
+char letter, word[8];
+fin >> number; fin >> word; fin >> real; fin >> letter;
+　　也可以把这四行读取文件的代码写为更简单的一行。
+fin >> number >> word >> real >> letter;
+　　它是如何运作的呢? 文件的每个空白之后, ">>" 操作符会停止读取内容, 直到遇到另一个>>操作符. 因为我们读取的每一行都被换行符分割开(是空白字符), ">>" 操作符只把这一行的内容读入变量。这就是这个代码也能正常工作的原因。但是，可别忘了文件的最后一行。
+　　This is really awesome!
+　　如果你想把整行读入一个char数组, 我们没办法用">>"?操作符，因为每个单词之间的空格（空白字符）会中止文件的读取。为了验证：
+char sentence[101]; fin >> sentence;
+　　我们想包含整个句子, "This is really awesome!" 但是因为空白, 现在它只包含了"This". 很明显, 肯定有读取整行的方法, 它就是getline()。这就是我们要做的。
+fin.getline(sentence, 100);
+　　这是函数参数. 第一个参数显然是用来接受的char数组. 第二个参数是在遇到换行符之前，数组允许接受的最大元素数量. 现在我们得到了想要的结果：“This is really awesome!”。
