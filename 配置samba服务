@@ -1,0 +1,30 @@
+https://www.cnblogs.com/zhaodehua/articles/9766452.html
+步骤1：sudo apt-get install samba
+步骤2：sudo vi /etc/samba/smb.conf
+在文件末尾添加
+
+[home]
+comment = home
+path = /home/
+writable=yes
+create mask=777
+force create mode = 0777
+directory mask = 0777
+force directory mode = 0777
+security = user
+public = no
+
+[root]
+comment = root
+path = /
+writable=yes
+create mask=777
+force create mode = 0777
+directory mask = 0777
+force directory mode = 0777
+security = user
+public = no
+
+步骤3：sudo smbpasswd -a xxx   #给该用户设定访问密码
+步骤4：sudo systemctl restart smbd
+sudo systemctl restart nmbd
