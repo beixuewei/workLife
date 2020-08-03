@@ -1,0 +1,94 @@
+打补丁
+应用场景
+  1.本地修改，验证没有通过
+	2.gerrit上merge单子的时候产生冲突
+	3.修改提交日志
+解决方法
+  1.修改文件-》git add
+ 	2.git commit  --amend
+	注：如果只修改日志信息，可以省略第一步
+结果描述
+  1.本地不会在生成新的commitID，会在原来的节点上直接修补
+	2.如果原节点已经提交到gerrit，打补丁后在提交不会生成新的单子，会在原来的单子上生成新的patch set
+  
+回退历史版本
+应用背景
+	生成的节点已经被push到中心库或gerrit单已经为merged状态，即修改已经合入中心库
+解决方法
+	git revert commitID
+	repo upload/git push
+结果描述
+  执行git revert操作，实际并不会把原来的commit节点删除，其实会在本地生成一个新的commit节点，新节点做了与原来节点的相反操作（例如，原节点增加了一行，revert节点就删除了该行内容）需要将该revert点提交到中心库。
+
+暂存本地修改
+应用背景
+  本地修改到一半的时候，突然有紧急bug需要修改，本地工作很重要不能回退
+解决方法
+  git stash
+结果描述
+  1.执行完git stash，被修改的内容就会被缓存起来，所有文件恢复未修改前的状态
+	2.紧急bug修改完后，执行git stash pop把刚才的修改在pop到本地，stash只会缓存更改的文件，不会记录历史快照，所以执行pop操作只会将修改文件的状态和当前文件状态合并，如果修改bug和stash修改了同一文件的同一行，可能产生冲突，请自行解决冲突
+
+挑单
+应用场景
+  1、不同产品存在相同的bug，其他产品已经修复，可以直接移植到本产品上
+  2、根据分支策略，不同用途的分支控制合入节奏
+解决方法
+	1.git cherry-pick commitID（本地修改）
+	2.直接拷贝gerrit单的命令，执行一下这个命令
+  3.同一服务器的也可以直接页面进行挑单
+结果描述
+   1.会直接将cherry-pick的单子合到本地，并生成新的CommitID，也可以基于该点继续进行修改，修改完后直接git add+git commit –amend
+   2.网页挑单会直接生成一个新change
+
+冲突解决
+冲突发生条件
+	1、同时修改了同一个二进制文件
+	2、修改了同一个文件的同一行
+	3、文件重命名为不同的名字
+	4、分支合并时一个分支上文件被删除，另一个分支上该文件被修改
+冲突发生场景
+	 1.rebase冲突（repo sync/git rebase/git pull –rebase）
+   2.分支合并(git merge)
+解决方法
+	 1.对于rebase产生的冲突，首先git status查看冲突文件，然后手动解决冲突，最后后执行git add +git rebase --continue
+   2.对于分支合并产生的冲突，首先git status查看冲突文件，然后手动解决冲突，最后执行git add +git commit
+   
+忽略文件
+应用场景
+	代码编译过程中会产生很多编译二进制文件比如：.o/ .class等文件，而这部分文件不需要添加到代码库中
+解决方法及忽略规则简要介绍
+	在git仓工作的根目录下面创建.gitignore文件，文件内容如下实例,同样.gitignore文件也可以上传的库上，这样每次下载都可以记录忽略规则，如果需要添加某个已经忽略的文件，使用 git add –f 文件名即可。
+  *.a     #忽略所有 .a 结尾的文件 
+  !lib.a  # 但 lib.a除外 
+  /TODO   # 仅仅忽略项目根目录下的 TODO文件，不包括 subdir/TODO 
+  build/  # 忽略build/目录下的所有文件 
+  doc/*.txt #会忽略 doc/notes.txt但不包括 doc/server/arch.txt 
+结果描述
+	被忽略文件的修改将不再被记录到git版本库中，即如果改文件被添加到忽略文件中，则其修改git不再记录
+	注：如果文件已经受git工具管控，再添加忽略规则将不在起作用，即：忽略规则只对untrack文件起作用
+
+图形化界面
+环境准备
+	需要安装xming工具
+使用GUI图形化操作界面
+ 	1.添加、修改、删除文件时，可以直接通过“git gui”命令，调出图形界面。
+	2.通过“Stage Changed”缓存文件(新添加的文件只能通过git add 命令缓存)，在提交信息处输入“提交信息”，然后通过“Commit”提交。
+
+Gerrit上搜索问题单
+Gerrit上支持正则匹配搜索
+
+废弃掉无用的change
+经过交流，确定某change是无用的，那么作者（或者管理员）点击Abandon Change废弃掉它
+
+Gerrit界面元素-依赖
+同一个库同一个分支上的多个commit，后面一个依赖前面一个（此依赖表是Gerrit自动生成的，合入原则：父项合入才能合入子项）
+
+chang have closed
+问题原因
+	是因为之前的单子提交后，不用后被abandon掉了，gerrit会认为这种单子是已经关闭了
+解决方法
+	方法一：将abandon的单子重新加载一下，然后在repo upload一下，在原单上生成一个新的patch set
+	方法二：在本地执行一下git commit --amend，在弹出的日志信息中把chang-id删了，然后重新repo upload，gerrit上会生成一个新的单子
+
+
