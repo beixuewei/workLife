@@ -1,0 +1,233 @@
+shell脚本
+
+1)	开头第一行写 #!/bin/bash 或者#1/bin/sh ，两个解析器bash和sh其实差不多
+2)	注释用#开头
+3)	函数的定义：
+func()
+{
+do something
+    } 
+4)	查看内存使用情况cat /proc/meminfo
+5)	/proc/meminfo中的MemTotal表示总内存大小
+6)	组合用法：totalMem = `cat /proc/meminfo | grep MemTotal | awk '{ print $2 }'` 得到总内存大小
+7)	awk命令：awk '{ print $1 }' xxx.txt表示读取xxx.txt的每一行，然后对每一行执行print $1操作。这里用的是单引号，要加括号，括号内的命令前后要加空格。
+8)	在awk命令中，$0表示整行命令，S1表示第1个参数，$2表示第2个参数
+9)	/proc/sys/vm/nr_hugepages文件记录了大页内存的使用情况
+10)	echo “$val” 可以打印出val的值，$在引号内也能实现取值
+11)	insmod命令用于加载模块，通常是设备驱动程序
+12)	$?表示上个命令的退出状态，或函数的返回值
+13)	if条件判断语句：
+if [ $? –ne ]; then
+do_something
+else
+    do_something
+fi
+if和左方括号之间有空格，左方括号右边有空格；右方括号左边有空格，右方括号右边跟着分号及空格
+
+14)	反引号``用于命令替换，在shell脚本中会被先执行
+15)	dirname xxx.txt，得到xxx.txt所在的相对路径（不会主动转换为绝对路径），
+dirname ./xxx.txt 会得到.
+ 
+16)	组合用法：cd `dirname $0`，进入当前脚本所在的目录（常用写法）
+17)	for循环的写法：
+for i in $(seq 1 10)
+do
+do_something
+    done 
+18)	sysctl –w net.core.wmem_max=$val ，把系统变量net.core.wmem_max设置为val的值
+ 
+19)	>/dev/null 2>&1 表示把标准输出重定向到“黑洞”，还把错误输出2重定向到标准输出1，也就是标准输出和错误输出都进了“黑洞”。效果就是没有任何屏幕打印。
+ 
+20)	if [ -e xxx.txt] 判断文件是否存在，if [ -f xxx.txt] 判断文件是否为文件，if [ -d xxx.txt] 判断文件是否为目录
+21)	chown –f ${username}:${usergroup} xxx.txt改变文件的属组，-f表示禁止除用法消息之外的所有错误消息
+ 
+22)	touch命令创建文件，但不打开。
+ 
+23)	nohup命令：不挂起。用于在系统后台不挂断地运行命令，退出终端不会影响程序的运行。在默认情况下（非重定向时），会输出一个名叫 nohup.out 的文件到当前目录下，如果当前目录的 nohup.out 文件不可写，输出重定向到 $HOME/nohup.out 文件中
+  
+24)	count = $(($count + 1))。 $(())用于作整数运算，里面的变量名前可以不加$。
+$(($count + 1))等价于$((count + 1))
+https://blog.csdn.net/xiely20180121/article/details/79302487
+$()用于命令替换，作用与``相同。不同点在于后者可移植性更好，前者不一定每一种shell都能支持。
+${}用于变量替换，一般情况下，$var 与 ${var} 并没有啥不一样
+25)	while循环的写法
+while [ x1 –lt x2 ]
+do
+do_something
+    done 
+26)	逐行读取的写法：
+cat xxx.txt | while read line
+do
+do_something
+done
+或者
+while read line
+do
+do_something
+done < input.txt
+这里line代表每一行，可以把line换成别的变量名，该变量名在可以用在循环体内进行操作
+27)	awk –F 指定分隔符
+echo $line | awk -F 'end' '{print $2}' 表示把line的内容按照字符串end进行分隔，然后打印第2部分
+28)	sed 's/ //g' 去掉所有空格
+29)	Ifconfig eth0 up 命令用于启动网络接口eth0，等同于ifup eth0
+30)	local用于定义函数内部的局部变量，其作用域从定义处开始，到函数末尾结束。不带local的变量都是global的，其作用域到shell脚本末尾
+31)	su - ${username} -c "xxx_cmd" 表示以username的身份去执行xxx_cmd命令，因为有的程序需要特定的用户才能正常运行
+32)	挂载命令mount [-t vfstype] [-o options] device dir 。-t指定文件系统类型，-o
+33)	cat /proc/cpuinfo 可以看到cpu信息
+cat /proc/cpuinfo | grep "processor" 可以看到
+processor       : 0
+processor       : 1
+processor       : 2
+processor       : 3
+processor       : 4
+processor       : 5
+processor       : 6
+processor       : 7
+processor       : 8
+processor       : 9
+processor       : 10
+processor       : 11
+processor       : 12
+processor       : 13
+processor       : 14
+processor       : 15
+获取cpu个数cpu_num=$(cat /proc/cpuinfo | grep 'process' | sort | uniq | wc -l)
+34)	tail -1 xxx.txt可以得到xxx.txt文件的最后一行
+35)	tr -cd "[0-9]" $line表示把line中所有除字符集[0-9]以外的字符删除。tr是translate的缩写，tr所有的功能均可由sed来完成，可以将tr视为sed一个极简的实现。
+-c为反选设定字符，也就是符合SET1的不处理，剩余部分进行转换，-d表示
+ 
+
+36)	组合用法：maxCpuID=`cat /proc/cpuinfo | grep "processor" | tail -1 | tr -cd "[0-9]"` 得到CPU总个数
+37)	route add default gw 192.168.1.1 增加默认网关
+38)	if [ -z “$val” ]  val字符串的长度为零则为真
+39)	awk 'BEGIN{FS=":"}{print $6}' ，这里的FS=”:”表示以列分隔，输入分隔符为冒号
+40)	组合用法：homeDir=`cat /etc/passwd | grep "$userName" | awk 'BEGIN{FS=":"}{print $6}'` 得到$userName用户的home目录
+41)	case语句的用法：
+case $val in
+	值1)
+        do_something
+        break
+;;
+值2)
+   		do_something
+        break
+;;
+esac
+其中break可以换成continue，exit 0等语句  
+42)	xargs：http://www.ruanyifeng.com/blog/2019/08/xargs-tutorial.html
+管道|的作用：把标准输出转换为标准输入；xargs的作用：把标准输入转换为命令行参数。因为大多数命令都不接受标准输入作为参数，只能直接在命令行输入参数，所以通常需要把管道和xargs组合起来用。
+43)	组合用法：小写转大写。cat xxx.txt | tr a-z A-Z 等价于cat xxx.txt | tr [:lower:] [:upper:] 
+44)	readlink –f xxx.txt 找到xxx.txt文件的链接的真实路径。如果xxx.txt没有链接，就显示xxx.txt的绝对路径
+45)	组合用法：dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/" && pwd )"
+${BASH_SOURCE[0]}表示bash脚本的第一个参数（如果第一个参数是bash，表明这是要执行bash脚本，这时"${BASH_SOURCE[0]}"自动转换为第二个参数。
+整条命令的效果，就是获取bash脚本xxx.sh所在的绝对路径
+"dirname"表示提取参数里的目录，dirname "${BASH_SOURCE[0]}"表示提取bash脚本第一个参数里的目录
+cd "$( dirname "${BASH_SOURCE[0]}" )"表示切换到刚才提取的目录
+46)	wc –l 统计行数
+47)	设置python路径，export PYTHONPATH=$dir
+48)	if [ -n $val ] 判断val非空
+49)	head –n 5 xxx.txt显示文件的前5行
+50)	sed用–n 选项，表示只打印匹配的行
+51)	组合用法：lines=$(sed -n -e "/$section/=" $file) 表示在file文件中查找所有包含变量section值的行的行号。两个左斜线之间的内容是pattern
+  
+52)	组合用法：nlines=$(cat $file | awk -v i=$i '/^\[.*\]$/ {if(NR>i)print NR}')
+这里的pattern 为^\[.*\]$，表示以[为行首，以]为行尾的任意长度字符
+ 
+53)	组合用法：根据是否有/etc/redhat-release文件，来选择用yum还是apt进行安装
+if [ -f '/etc/redhat-release' ]
+then
+    set=yum
+else
+    set=apt
+fi 
+54)	组合用法：根据是否有/etc/lsb-release文件，来选择用yum还是apt进行安装
+set=yum
+if [ -f '/etc/lsb-release' ]
+then
+    echo ' System Is Ubuntu'
+    set=apt
+fi
+55)	apt install ntp –y命令，-y选项表示直接确认，不再询问；ntp是用来做时间同步的
+组合用法：
+server_ip=10.3.23.46
+sed -i 's/pool 0.ubuntu.pool.ntp.org iburst/# pool 0.ubuntu.pool.ntp.org iburst/g' /etc/ntp.conf
+sed -i 's/pool 1.ubuntu.pool.ntp.org iburst/# pool 1.ubuntu.pool.ntp.org iburst/g' /etc/ntp.conf
+sed -i 's/pool 2.ubuntu.pool.ntp.org iburst/# pool 2.ubuntu.pool.ntp.org iburst/g' /etc/ntp.conf
+sed -i "s/pool 3.ubuntu.pool.ntp.org iburst/# pool 3.ubuntu.pool.ntp.org iburst \n restrict $server_ip \n server $server_ip\n/g" /etc/ntp.conf 
+ntpdate -u $server_ip
+56)	/usr/bin/expect，用于处理交互的命令, 适用于需要对多台服务器执行相同操作的环境：
+组合用法：
+#!/usr/bin/expect –f	#这里注意，开头写的不再是/usr/bin/bash
+# ./auto_ssh.sh 10.151.250.222 root 123 \"cd /home;reboot\"
+set ip   [lindex $argv 0]		#被执行脚本后面紧跟着的是argv0
+set username [lindex $argv 1]
+set passwd [lindex $argv 2]
+set task [lindex $argv 3]
+set timeout -1		#设置为-1表示永不超时
+
+spawn ssh $username@$ip "$task"	#调用要执行的命令
+expect {
+"(yes/no" { send "yes\r"; exp_continue } 	#匹配交互内容，send返回应答，换行用\r
+"*assword:*" { send "$passwd\r" }
+}
+
+#expect {		#如果后面还有新的对话，再另写expect语句
+#*\\$ { send "su\r" }
+#}
+expect eof	#这个一定要加，与spawn对应表示捕获终端输出信息终止，类似于if....endif
+exit 
+57)	command –v python3：command –v命令可以判断后面跟着的命令是否支持
+58)	wget命令用于下载文件，用法：wget http://xxx.xxx.xxx/xxx.tar.gz
+-nd选项表示不创建目录，-c选项表示断点续传
+59)	ln –s src_file dst_file命令用于建立软链接
+60)	killall -9 name命令用于杀死名字为name的进程，kill -9 123命令用于杀死pid为123的进程，kill -s SIGINT 123命令用于向pid为123的进程发送SIGINT信号
+61)	setenforce 0用于关闭SElinux防火墙，setenforce 1用于开启SElinux防火墙
+62)	systemctl restart httpd用于重启httpd服务
+63)	pkill -9 name用于杀死名字为name的进程，类似于killall命令
+64)	获取操作系统类型：ostype=`uname -m`
+返回x86_64 
+65)	组合用法：scriptname=`echo $(basename "$0") | awk -F"." '{print $1}'` 剥离目录和后缀；
+basename /home/dir1/dir2/xxx.txt 会得到xxx.txt，作用是去掉目录
+66)	tee xxx.txt命令：读取标准输入的数据，并将其内容输出到xxx.txt的末尾，不覆盖原有内容
+67)	echo "abcdefg" | cut -c 2-4表示按字符截取第2到4个字符，即bcd。-b选项表示按字节截取
+68)	echo "12-23-34-45" | cut -d '-' -f 2，其中-d选项指定了分隔符为'-'，-f选项表示取第几个域，上面输出的结果是23
+69)	echo "abc.txt" | awk -F"." '{print $1}'等价于echo "abc.txt" | awk -F "." '{print $1}'，后者在-F后面多了个空格；上面这两者又等价于echo "abc.txt" | awk 'BEGIN{FS="."} END{print $1}'和echo "abc.txt" | awk 'BEGIN{FS="."} {print $1}'，最后都是输出abc。注意分隔符是用双引号括起来的。
+70)	awk '$0 !~ /^\s*$/ {print $0}，其中!~表示不精确匹配，\s表示空白符，/^\s*$/表示整行都是空白符
+71)	if [ a -o b ]等效于if [a || b]
+72)	if [ a -a b ]等效于if [a && b]
+73)	unzip -o zip_file -d dst_dir命令中的-o覆盖重名文件，-d指定解压目标目录
+74)	let 表达式，或者let "表达式"，或者let '表达式'，都等价于$((表达式))
+例如 let ++i 等价于 i=$(($i + 1)) 
+75)	组合用法：ps -aux | grep "name" | awk '{print $2}' | xargs kill -9找到名为name的进程，并杀掉它
+76)	ps -elf和ps -aux的区别：差不多，内容略有差异。个人习惯用ps -aux
+77)	trap "prog_exit" SIGTERM表示在接收到SIGTERM信号时，执行函数prog_exit()。这里要求前面定义过prog_exit函数
+78)	字符串切片：
+1.	${#var} : 返回字符串变量var的长度
+2.	${var:offset}：返回字符串变量var中从第offset个字符后（不包括第offset个字符）的字符开始，到最后的部分，offset的取值在0到${#var}-1之间
+3.	${var:offset:number}:返回字符串变量var中从第offset个字符后（不包括第offset个字符）的字符开始，长度为number的部分
+4.	${var: -length}:取字符串的最右侧几个字符，冒号后必须有一个空白字符
+5.	${var:offset:-length}: 从最左侧跳过offset字符，一直向右取到距离最右侧length个字符之前的内容
+79)	dos2unix xxx.txt把xxx.txt从dos格式转换为unix格式，同样作用的有vim的命令set ff=unix
+80)	taskset -c cpu_id xxx.sh在指定的cpu上执行xxx.sh脚本，即绑核
+81)	在shell文件开头加上set -e的作用：当 shell 执行的时候，如果出现错误立即退出
+82)	read -t 30 -p "user: " USER等待用户输入，等待时间为30秒，等待时输出提示信息"user",用户输入后赋值给USER变量
+83)	Here document方式，用于传入多行分割参数给执行命令
+ 
+示例：
+ 
+84)	sed -i 's#{JOB_ID}#'${JOB_ID}'#g' xxx.sh表示把xxx.sh里面的所有字符串{JOB_ID}替换为${JOB_ID}，不论什么字符，紧跟着s命令的都被认为是新的分隔符，所以，“#”在这里是分隔符，代替了默认的“/”分隔符
+85)	if [ x"${val}" == x ]中x的作用：防止出现语法错误。如果不写x，只用 if ["${var}" == "" ]来判断${var}的值，当${var}为空或未设置时，语句被解释为 if [ == "" ]，出现语法错误。加上x后，当${var}为空或未设置时，解释为if [ x== x ] ，依然正确。
+86)	ulimit -c unlimited不限制core文件的大小，主要用于调试
+87)	id -u username显示username的ID号，为纯数字。id -g username显示群组的ID号，也为纯数字。
+88)	grep的-v选项表示反选，-E选项表示启用多个pattern，pattern之间用|分隔
+示例：grep -E "pattern1|pattern2" filename
+89)	lscpu显示cpu信息
+  
+90)	expr命令，表达式求值。比$(())更强大
+91)	$0 表示shell本身文件名；
+$? 表示上一条运行命令的返回值；
+$! 表示shell上一条运行的后台process的PID；
+$$ 表示shell本身的pid；
+$# 表示shell的参数个数；
+$@表示所有参数列表， 以"$1 $2 … $n"的形式输出所有参数，此选项参数可超过9个
+$*  表示所有参数列表， 以"$1" "$2" … "$n" 的形式输出所有参数
