@@ -1,0 +1,16 @@
+从文件安装所需要的包
+命令格式： pip install -r a.txt
+a.txt的内容格式：
+numpy
+pandas
+matplotlib
+
+
+安装whl文件
+pip install xxx.whl
+
+
+安装时指定证书
+pip -v --cert xxx.crt install numpy
+或者
+pip --cert xxx.crt install numpy
