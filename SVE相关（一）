@@ -2,6 +2,7 @@
 1）由.cpp文件编译成.s文件：aarch64-linux-gnu-gcc -S test.cpp -o test.s -O3 -march=armv8.2-a+sve
 PS：是否要加-D__ARM_FEATURE_SVE选项？
 2）由.s文件编译成.so文件： aarch64-linux-gnu-gcc -shared test.s -o libtest.so
+注意编译出来的.s文件，里面可能有些符号被替换成下划线开头的符号了，要改回去，不然下面链接.so时可能会报错找不到reference
 3) 链接该.so，生成可执行文件test：g++ main.cpp -L/so_file_path -ltest -o test
 
 编译选项-fPIC在 .c到.s阶段是不需要的，不起作用的。
