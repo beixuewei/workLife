@@ -1,0 +1,5 @@
+sudo perf record a.out
+a.out为待测的可执行程序
+看报告用命令：sudo perf report
+
+显示的结果里有耗时百分比，能定位到具体的指令
