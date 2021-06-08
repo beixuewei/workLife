@@ -1,0 +1,21 @@
+exp算子的实现参考：
+
+opencv源码：
+modules/core/src/mathfuncs.cpp 中的
+void exp( InputArray _src, OutputArray _dst)
+
+以及 modules/core/src/mathfuncs_core.dispatch.cpp
+
+netlib源码参考：
+http://netlib.org/fdlibm/ex_exp.c
+这个用详细的公式，包括计算公式
+
+
+FLT_MIN定义的是最小的正浮点数
+定义是
+#define FLT_MIN 1.175494351e-38F 
+FLT_MAX的定义则是
+#define FLT_MAX 3.402823466e+38F 
+stack overflow上很多人说为什么FLT_MIN打印出来是0。
+是因为打印是没有注意精度的原因。如果输出%.100f，那就可以看到比较准确的值了
+
