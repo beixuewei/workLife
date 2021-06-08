@@ -1,0 +1,4 @@
+vim垂直分屏：加-On，n为分屏的数量。切换左屏：ctrl+w+h，切换右屏：ctrl+w+l。
+或者ctrl+w, w
+vim -O2 1.txt 2.txt
+
