@@ -1,6 +1,7 @@
+从文件安装所需要的包
 命令格式： pip install -r a.txt
-
 a.txt的内容格式：
 numpy
 pandas
 matplotlib
+
