@@ -1,0 +1,145 @@
+官方文档 Arm C Langage Extension for SVE 解读
+
+第3章
+ACLE——ARM C Language Extensions
+有效向量长度不是一个编译时确定的常量，而是执行过程中可以变化的
+vector granules——指的是64bit的倍数
+ACLE采用了无大小的类型定义，该类型有以下限制：
+不能作为sizeof和_Alignof的参数
+无大小类型的指针不能进行算术运算
+不能作为结构、联合、类的成员
+_Atomic变量不能有无大小类型
+不能抛出或捕获无大小类型的对象
+Lambda表达式不能通过值的方式捕获无大小类型，但能通过引用的方式捕获
+C++标准库容器不能包含无大小类型
+
+3.3章
+arm_sve.h包含了stdint.h和stdbool.h，可以使用uint8_t等
+svreinterpret功能用于向量类型转换，而不会改变bit内容。向量转换不允许用C风格的转换
+svcvt用于数量转换，如int转float
+
+3.4章
+svint8x2_t类型为两个向量的元组
+创建元组的方法：
+svcreateN(svBASE_t x0, …svBASE_t xN-1)，返回svBASExN_t类型
+改变元组的方法：
+svsetN(svBASExN_t tuple, uint64_t imm_index, svBASE_t x)，返回元组的复制，且元组的第imm_index个元素是x
+获取元组中的元素
+svgetN(svBASExN_t tuple, uint64_t imm_index)
+
+
+4.1章（重点）
+SVE ACLE函数的形式为
+svbase[_disambiguator][_type0][_type1]…[_predication]
+base：
+	对大多数函数来说，这部分为小写的SVE指令名，外加一些变化：
+	加入F、S、U，分别代表浮点、有符号、无符号。这些符号也会出现在type后缀中。
+	简单的无扩展加载、无截断保存，加入size后缀B、H、W、D。
+	相反，扩展加载总是需要显式指定扩展类型，例如：svld1ub_u32把8bit数据无符号扩展到一个uint32_t向量中，svld1sb_u32把8bit数据有符号扩展到一个uint32_t向量中
+disambiguator：
+	用于区别函数的不同格式：
+	load、store、perfetch、ADR函数用这个域来区别不同的寻址模式
+	算术运算使用_n来表示最后一个操作数是标量，而不是向量。
+	一些基予谓词的操作使用_pat来表示操作的是显式的常量谓词pattern，例如MUL3，而不是all-true的谓词或者svbool_t
+type0：
+	该域列出了向量和谓词的类型，它们不包含向量base和displacement，也不包含由前一参数类型和返回类型唯一决定的参数类型。
+	对于谓词来说，后缀b后面跟着关联数据元素的大小，单位为bit；或者仅为b，表示不假定特定的元素大小。例如：PTRUE Pd.B表示svptrue_b8，PTRUE Pd.H表示svptrue_b16。PFALSE Pd.B表示svpfalse_b，而不是svpfalse_b8，因为结果使用于所有元素大小。
+predication：
+	该后缀描述了谓词操作后结果中的非激活元素：
+	z 零谓词：设置结果中的所有的非激活元素为0
+	m 合并谓词：复制第一个向量参数中的的所有的非激活元素
+	一元操作的通用谓词之前有一个单独的向量参数，例如：
+	CLZ Zd.H, Pg/M, Zs.H  对应  Zd = svclz_u16_m(Zd, Pg, Zs);
+	其中，参数不一定要在语句构成上关联结果，
+	Zd = svclz_u16_m(svadd_u16_z(…), Pg, Zs); 也是可以的
+	二元和三元操作复用操作的第一个参数作为merge input，例如：
+	ADD Zd.S, Pg/M, Zd.S, Zs2.S 对应于 Zd = svadd_u32_m(Pg, Zd, Zs2);
+	其中，Zd参数提供了加法用到的非激活元素值和第一个操作数
+	x Don’t-care谓词，把非激活元素设置为unknown值。意外用到非激活元素会导致内存泄漏。
+	谓词加载、谓词比较、谓词string匹配操作总是置零操作，因此对应的操作没有谓词后缀。
+
+4.2重载别名
+函数命名习惯中通常带有参数类型的明显信息，例如, svclz_u16_z函数总是采用svuint16_t类型参数，而没有其它svclz_type_z函数会用到，因此ACLE采用了更短的重载别名，这意味着函数的所有重载格式有相同数量的参数，在考虑每个参数之后会选择到正确的重载格式。
+整形提升（integer promotion）意味着基于标量整型类型的重载是nob-obvious的。ACLE不单独使用标量参数的重载去决定结果的类型。svdup和svindex总是需要一个后缀来指示返回类型。
+重载别名总是完整函数名去掉部分后缀。
+svclz[_u16]_m表示：完整函数名为svclz_u16_m，别名为svclz_m
+
+4.3章 寻址模式
+	Load、store、prefetch、ADR函数对于不同的寻址模式有不同的格式，
+	寻址模式包含有一个base部分和一个displacement部分。base部分是单一的c指针或者一个地址值向量（地址值为32或64bit）。vector base的寻址模式采用消岐器[_xNNbase]，其中xNN地址向量元素的类型。
+	displacement部分，如果存在，可能会是一个64bit的标量，或者一个元素大小为32/64bit的向量。
+_offset：displacement部分是一个64bit的标量字节数
+_index：displacement部分是一个64bit的标量元素数。例如，一个函数从内存中加载16bit的元素，则_index的1等价于_offset的2
+_vnum：displacement部分是一个64bit的标量，表示一个单一向量的worth of element。例如，一个函数从内存中加载一个或多个完整的vector，则_vnum的1等价于_offset的VGx8（一个向量中的全部字节数）。如果一个函数加载16bit元素并扩展为32bit，则_vnum的1等价于_offset的VGx4（一个向量中的一半字节数）。这种格式对应于MUL VL寻址模式。该displacement；参数可以是任意的标量值，不需要是特定范围内的常量。
+_[xNN]offset：displacement那部分是一个xNN类型的向量，其每个元素指定了一个separate byte count。例如：_[s32]offset指定了一个向量of有符号32bit字节count，等价于STXW寻址模式。_[u32]offset指定了一个向量of无符号32bit字节count，等价于UTXW寻址模式。
+_[xNN]index：displacement那部分是一个xNN类型的向量，其每个元素指定了一个separate element count。
+以上displacement部分不必为常数，也不必限定取值范围
+
+例如：最简单的寻址模式是
+svint16_t svld1[_s16](svbool_t pg, const int16_t *base)
+从base[0]到base[N-1]中加载N个元素
+
+svint16_t svld1_vnum[_s16](svbool_t pg, const int16_t *base, int64_t vnum)
+从base[N*vnum]到base[N*vnum+N-1]中加载N个元素
+
+svuint32_t svld1_gather_[s32]offset[_u32](svbool_t pg, const uint32_t *base, svint32_t offsets)
+元素i的地址为 (int32_t *)((uintptr_t)base + offsets[i])
+批注：写错了吧？应该是 
+svuint32_t svld1_gather[_s32]_offset[_u32](svbool_t pg, const uint32_t *base, svint32_t offsets)
+用的是普通的地址值相加，然后取地址处的值
+
+svuint32_t svld1_gather_[s32]index[_u32](svbool_t pg, const uint32_t *base, svint32_t indices)
+元素i的地址为&base[indices[i]].
+批注：直接取元素
+
+svint32_t svld1_gather[_u32base]_index_s32(svbool_t pg, svuint32_t bases, int64_t index)
+元素i的地址为 ((int32_t *)(uintptr_t)bases[i]) + index
+
+
+
+
+4.4章
+一些SVE指令有立即数格式，例如：
+ADD Zd.S, Zd.S, #1
+Zd.S的每个元素加1。ACLE对所有算术运算和所有标量输入都扩展了此格式
+svint32_t x;
+…
+x = svadd[_n_s32]_x(pg, x, 1);
+x中的每个激活元素加1
+
+svfloat64_t x;
+double *ptr;
+…
+x = svadd[_n_f64]_x(pg, x, *ptr);
+x中的每个激活元素加上ptr指向的值
+_n表示最后一个操作数是标量而不是向量
+
+4.5章
+一些函数采用枚举值作为参数，枚举值必须是整型常量，且必须是一个有效的枚举值
+
+4.6章
+load和store指令对普通指针的解引用可能会触发fault。这些fault应该作为程序跑挂的症状，而不应是程序故意植入的
+
+4.7章
+	一个特殊功能寄存器first-fault register(FFR)记录了哪些元素已成功加载。FFR描述了自上次写入该寄存器后所有执行过的加载。
+	如果由于potential fault导致一个first-faulting o或non-faulting加载失败，FFR会清零from that element onwards，返回向量的值会是未知的。如果在指令开始之前，关联的FFR元素已经清零，则元素也会为unknown值。
+……
+ACLE把first-faulting和non-faulting加载分成“FFR groups”，每个组以一个显式读取FFR或写入FFR的函数开始及结束。更准确地说，ACLE引入了一个全局的“first-fault register token” (FFRT)来表明当前的FFR组。FFRT是一个纯概念，它包含3部分信息：
+nwrite	显式写入FFR的数量
+lastwrite	上一次写入FFR的值
+nread	从上次写入之后，从FFR中显式读取到的数量
+
+只有两种办法可以改变FFRT：
+1. nwrite加1，设置lastwrite为一个给定值，并设置nread为0
+2. nread加1
+往FFR显式写入，采用的是第一种办法；从FFR中显式读取，采用的是第二种办法
+例子：
+svfloat64_t z0, z1, z2;
+svbool_t p0, p1, p2, p3;
+double *x0, *x1, *x2;
+…
+svsetffr();
+z0 = svldff1[_f64](p0, x0);
+z1 = svldff1[_f64](p1, x1);
+z2 = svldff1[_f64](p2, x2);
+p3 = svrdffr();
