@@ -1,0 +1,21 @@
+编译命令（用gcc8.3版本）：
+由.cpp文件编译成.s文件：aarch64-linux-gnu-gcc -S test.cpp -o test.s -O3 -march=armv8.2-a+sve
+
+大部分ARM机器还不支持SVE，要安装仿真环境
+https://developer.arm.com/tools-and-software/server-and-hpc/compile/arm-instruction-emulator
+这个软件不能装在x86_64机器上
+
+相应的还要安装qemu：
+https://www.qemu.org/
+
+为什么arm要设计sve，sve里最基本的寄存器包括z，predicate, ffr等
+https://www.linleygroup.com/mpr/article.php?id=11753
+
+对SIMD最基本的介绍：
+https://zhuanlan.zhihu.com/p/55327037
+
+除了用gcc8.3版本进行编译，也可以使用armclang，命令格式：
+armclang --target=aarch64-arm-none-eabi -ffp-mode=fast -mno-unaligned-access -O3 -march=armv8.2-a+sve test.cpp -o test
+armclang需要有licence授权
+
+
