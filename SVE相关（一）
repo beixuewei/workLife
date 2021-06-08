@@ -4,6 +4,24 @@ PS：是否要加-D__ARM_FEATURE_SVE选项？
 2）由.s文件编译成.so文件： aarch64-linux-gnu-gcc -shared test.s -o libtest.so
 3) 链接该.so，生成可执行文件test：g++ main.cpp -L/so_file_path -ltest -o test
 
+编译选项-fPIC在 .c到.s阶段是不需要的，不起作用的。
+在 .s到.o 和 .o到.so 两个阶段都起作用
+
+实现一共享对象时，最一般的编译链接命令行为： 
+ g++ -fPIC -shared test.cpp -o libtest.so
+    或者是：
+ g++ -fPIC test.cpp -c -o test.o
+ ld -shared test.o -o libtest.so
+上面的命令行中-shared表明产生共享库，而-fPIC则表明使用地址无关代码。PIC：Position Independent Code.    
+Linux下编译共享库时，必须加上-fPIC参数，否则在链接时会有错误提示（有资料说AMD64的机器才会出现这种错误，但有的Inter机器也会出现）：
+/usr/bin/ld: test.o: relocation R_X86_64_32 against `a local symbol' can not be used when making a shared object; recompile with -fPIC
+test.o: could not read symbols: Bad value
+collect2: ld returned 1 exit status
+   如何确认一个共享对象是PIC呢？
+readelf -d libtest.so | grep TEXTREL 
+如果上边的shell有任何输出，则说明这libtest.so不是PIC。TEXTREL表示代码段重定位表地址，PIC的共享对象不会包含任何代码段重定位表。
+
+
 大部分ARM机器还不支持SVE，要安装仿真环境
 https://developer.arm.com/tools-and-software/server-and-hpc/compile/arm-instruction-emulator
 这个软件不能装在x86_64机器上
@@ -32,3 +50,5 @@ ARM Compiler 6 main focus has always been bare-metal applications running on ARM
 libopencv_highgui3.so
 libopencv_imgproc3.so
 libopencv_core3.so
+
+
