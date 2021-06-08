@@ -3,3 +3,12 @@ a.out为待测的可执行程序
 看报告用命令：sudo perf report
 
 显示的结果里有耗时百分比，能定位到具体的指令
+
+perf工具安装：
+sudo apt-get install linux-source
+cd /usr/src/tools/perf
+make && make install
+
+中间可能会提示没有flex、bison，分别安装即可
+sudo apt-get install flex
+sudo apt-get install bison
