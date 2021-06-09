@@ -1,0 +1,8 @@
+Eigen相比于其他线性代数库最突出的特点是，“不是效率高的事情不做，不是最快的算法就不提供”。
+看下Eigen自己说的，Eigen: What happens inside Eigen, on a simple example总结来说Eigen做了这么几件事：
+1. 不用中间变量
+2. 小矩阵和大矩阵根据实际情况选用
+3. 特殊的赋值处理
+4. 矢量化 
+
+SSE指令市面上Eigen库最快，对于Armadillo+数学库的组合速度取决于数学库的速度，Armadillo本身数学库就不用提了。
