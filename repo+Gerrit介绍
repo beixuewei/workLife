@@ -1,0 +1,10 @@
+Repo是Google基于git开发的版本管理工具。它把多个git仓库统一管理起来，把开发者提交的代码上传到代码检视系统。
+常用的repo命令：
+repo init 初始化repo仓
+Repo sync 同步repo 仓代码库到本地工作库
+Repo start	启动本地工作分支
+Repo upload 上传本地库到gerrit
+Repo help command_name
+
+Gerrit是适用于git项目的基于web的代码review系统及权限控制系统
+Gerrit让认证通过的用户可以提交代码，提交的代码通过Review和Verify后会自动合并
