@@ -1,0 +1,41 @@
+https://xw.qq.com/cmsid/20210504A06FNG00
+
+sve和neon都是arm推出的指令集，前者对应AArchv8，后者对应AArchv7,前者可以当成后者的下一代扩展
+sve1支持32个vector寄存器（低位复用为neon寄存器），8个predicate寄存器（作为mask使用）
+
+sve的vector长度是可伸缩，最多支持到1024bit，vector长度在循环中通过指令获得；neon的vector长度固定为128bit，不利于扩展和移植
+
+对于同样的功能： y = y + x * a
+
+sve代码示例：
+#include <arm_sve.h>
+void func(float *y, const float *x, float a, long len)
+{
+  for (long i = 0; i < len; i += svcntw()) {
+    svbool_t pg = svwhilelt_b32(i, len);
+    svfloat32_t vf_y = svld1(pg, y + i);
+    svfloat32_t vf_x = svld1(pg, x + i);
+    vf_y = svmla_m(pg, vf_y, vf_x, a);
+    svst1(pg, y + i, vf_y);
+  }
+}
+
+neon代码示例：
+#include <arm_neon.h>
+void func(float *y, const float *x, float a, long len)
+{
+  for (long i = 0; i < len - 3; i += 4) {
+    float32x4_t vf_y = vld1q_f32(y + i);
+    float32x4_t vf_x = vld1q_f32(x + i);
+    vf_y = vmlaq_n_f32(vf_y, vf_x, a);
+    vst1q_f32(y + i, vf_y);
+  }
+}
+
+c++代码实现：
+void func(float *y, const float *x, float a, long len)
+{
+  for (long i = 0; i < len; ++i) {
+    y[i] += x[i] * a;
+  }
+}
