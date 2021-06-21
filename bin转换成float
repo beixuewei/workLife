@@ -1,0 +1,4 @@
+用命令 hexdump xxx.bin，可以看到bin文件里的内容
+
+https://www.binaryconvert.com/convert_float.html?decimal=049#
+打开这个网页，在下面0x的里面写入xxx.bin中4个字节的内容（假设xxx.bin中的内容表示的是一连串的浮点数），再点covert to decimal，就能看到对应的浮点数了
