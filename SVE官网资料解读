@@ -1,0 +1,125 @@
+https://developer.arm.com/docs/101726/latest/explore-the-scalable-vector-extension-sve/what-is-the-scalable-vector-extension 
+
+SVE（Scalable Vector Extension）：可伸缩向量扩展，是Arm®v8-A AArch64指令集的下一代SIMD扩展。SVE不是Neon的扩展，而是针对HPC（high performance computer）的新向量指令集。
+
+怎样优化SVE代码：
+1、	让编译器自动向量化你的代码
+-O2选项：自动向量化；-O1加上-fvectorize选项：使能自动向量化；-O0：无法向量化
+2、	写内联SVE汇编代码
+
+编译Arm SVE架构的C/C++代码
+1、	安装Arm HPC 工具套件
+a.	下载安装包
+b.	获取Arm Allinea Studio的license，有试用版
+c.	下载Arm Allinea Studio包
+d.	安装包
+e.	配置
+2、	由C/C++代码生成Arm汇编代码
+3、	生成二进制可执行文件
+4、	编译、链接.o文件
+5、	优化
+
+
+Arm Allinea Studio包含3个包：Arm Compiler for Linux， Arm Forge，Arm Performance Reports。如果要用floating license，还需要Arm Licence Server。License试用期7天。
+
+
+安装Arm Instruction Emulator之前要先安装Environment Modules，使得可以动态更改Linux的用户环境，这对于管理不同版本的软件包特别有用。
+sudo apt-get install environment-modules
+ 
+安装好后要打开新的shell窗口才生效
+ 
+
+
+怎样运行SVE程序：支持SVE的硬件还未面世，可选择QEMU、Fast Models、ArmIE (Arm Instruction Emulator)，其中前两个是交叉平台模型，后一个直接运行在Arm平台上。
+
+
+Arm Performance Libraries包括：
+BLAS
+LAPACK
+FFT
+Sparse matrix-vector multiplication
+
+
+libamath中包含了一些优化版本的libm函数。Arm编译器会自动链接libamath库而不用加任何编译选项。GCC编译器在链接libm之前必须显式链接libamath库：
+gcc code_with_math_routines.c -lamath –lm
+
+
+公共编译器选项
+armclang –help：帮助信息
+-s：输出汇编代码，生成.s文件
+-c：执行编译步骤，但不链接，生成一个ELF格式的.o文件。如果后续要进行链接，需要再次跑armclang。
+-o：指定输出文件名
+- march=name[+[no]feature]：生成能运行在目标架构处理器上的代码。如march=armv8-a+sve
+-Olevel：指定优化等级
+--help：获取帮助
+--version：显示版本信息和license的详情。
+
+
+为什么SVE对HPC有用？
+
+
+SVE指令集包含以下对HPC的新架构特性：
+可伸缩的向量长度
+Per-lane prediction
+集中加载和分散存储
+vector partitioning
+Fault-tolerant speculative vectorization
+Horizontal vector operations
+Serialized vector operations
+
+SVE指令可以分为predicated instructions、unpredicated instructions
+unpredicated instructions：操作Z寄存器
+predicate generation instructions：例如：数字比较
+predicate manipulation instructions
+
+
+SVE有32个可伸缩向量寄存器Z0~Z31，每个寄存器是128bit的整数倍
+有16个可伸缩判断寄存器P0~P15，每个寄存器有16bit的整数倍，每个bit对应向量寄存器的一个字节.只有P0~P7可以作为Governing predicate
+zeroing predication：The Inactive elements in the destination are set to zero
+merging predication：The Inactive elements in the destination retain their previous value.
+对于不同的向量organization，Governing predicate代表不同的含义
+
+直接写FFR的指令只有RDFFR、RDFFRS
+直接读FFR的指令只有WRFFR、SETFFR
+
+ 
+
+SVE exception class，值是0b011001，在in ESR_ELx.EC中
+
+异常陷阱（exception trap）是指当异常或者中断发生时，处理器捕捉到一个执行线程，并且将控制权转移到操作系统中某一个固定地址的机制。
+
+SVE的load和store操作包含的内存访问，可能会引起Synchronous memory faults
+Asynchronous exception behavior
+
+SVE要求向量长度必须为小于最大向量长度的2的幂次方，或者为128的整数倍而不是2的幂次方。
+
+SVE汇编指令集
+SVE向量寄存器Z0-Z31，predicate register有P0-P15
+向量或predicate register中的元素个数不用指定为向量寄存器shape qualifier（修饰）的一部分。
+Pg不需要元素大小qualifier，除非元素大小不能从源或目的元素大小中infer出来。
+However, an assembler must accept a predicate element size qualifier。元素大小修饰要有
+
+指令分类：
+ 
+
+SVE元素访问指令的后缀
+ 
+在unpacked数据访问场景下：
+对于加载指令，每个元素访问是符号扩展或填0扩展to fill the vector element
+对于存储指令，每个向量元素转化为内存元素访问大小
+
+当向量元素大小与内存元素访问大小相等时，情况与packed数据访问相同。packed数据访问不支持有符号访问类型
+ 
+
+
+Arm C Language Extensions for SVE.pdf
+向量类型
+ 
+不指定大小的单向量类型
+标量类型
+ 
+predicate类型
+主要用于选择向量中的元素
+ 
+
+svld1ub_u32
