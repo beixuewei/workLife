@@ -1,0 +1,41 @@
+启动redis-cli时的-c选项表示以cluster模式来启动，否则就是默认的单机模式。
+在单机模式下，访问不属于本node上的key时，会报MOVED错误。
+
+cluster slots命令可查看slot分配情况
+cluster info命令可查看集群信息
+
+redis cluster只能使用0号datasbase， 即使redis.conf中配置了多个database，也只能使用0号。因此不支持select命令
+> select 1
+(error) ERR SELECT is not allowed in cluster mode
+
+在集群模式下，keys命令只会返回当前node上的所有key，而不能返回整个cluster中所有的key。（当前node切换时有会提示redictected ...)
+
+当主键位于不同节点上时，MULTI/EXEC事务有可能不能正常执行：
+1）MULTI/EXEC事务中的所有命令均操作相同的主键，且该主键就在当前连接的Redis节点上，则：
+无论是cluster模式还是单机模式的client，事务中的每条命令都可以正确执行
+
+2）MULTI/EXEC事务中的所有命令均操作相同的主键，但该主键不在当前连接的Redis节点上
+单机模式的client中事务中的任何命令都无法执行，对于每条命令均返回MOVED信息
+cluster模式的client中，事物中的单条命令都可以正确执行，multi命令会执行失败（跨节点就失败）。
+
+3）MULTI/EXEC事务中的所有命令操作不同的主键，且某些主键不在当前连接的Redis节点上
+单机模式下的client中，主键不在当前连接的Redis节点上的命令返回MOVED信息，且multi命令会由于有错误，导致不能正确执行，主键在当前连接的redis节点上的命令执行时虽然未返回错误，但是命令的执行结果失败；
+cluster模式下，多个key在不同的nodes上时，会导致multi命令失败，后续的命令直接转化为单条命令来执行，执行结果是正确的
+
+4）MULTI/EXEC事务中的所有命令操作不同的主键，且所有主键均在当前连接的Redis节点上
+事务中的所有命令均可以成功执行
+
+多主键命令，当各主键位于不同节点上时，命令可能无法正常执行
+1）Multiple主键命令包含了不同的主键，且所有主键均在当前连接的Redis节点上
+无论是单机模式还是cluster模式的client，命令均无效，均执行失败
+(error) CROSSSLOT Keys in request don't hash to the same slots
+
+2）Multiple主键命令包含了多个相同的主键，且该主键在当前连接的Redis节点上
+无论是单机模式还是cluster模式的client，命令均有效，均正常执行
+
+3）Multiple主键命令包含了多个相同的主键，但该主键不在当前连接的Redis节点上
+单机模式的client下，命令有效，返回MOVED信息，执行失败，
+cluster模式的client下，命令有效，client会跳转到对应的node上，执行成功，执行结果正确
+
+4）Multiple主键命令包含了多个不同的主键，且有主键不在当前连接的Redis节点上
+无论cluster还是单机模式的client下，命令均有效，返回CROSSSLOT报错
