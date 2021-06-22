@@ -1,0 +1,25 @@
+# useradd tony
+# passwd tony
+Enter new UNIX password:
+Retype new UNIX password:
+passwd: password updated successfully
+输入两次密码后设置成功
+
+给tony用户添加root权限：
+方法一：
+sudoedit /etc/sudoers
+添加一行：
+tony ALL=(ALL) ALL
+用ctrl组合键保存，会提示保存为/etc/tmp.sudoers.xxx文件，不用改这个文件名，保存退出
+
+方法二：
+usermod -g root tony
+这里需要等待一段时间，比较慢
+
+ssh登录机器，切换到tony用户，如果发现只显示一个提示符$，那么就
+sudo vim /etc/passwd
+把 tony:x:1001:0::/home/tony:/bin/sh 末尾的sh改成bash，然后保存退出
+
+在/home目录下新建tony文件夹
+cd /home
+mkdir tony
