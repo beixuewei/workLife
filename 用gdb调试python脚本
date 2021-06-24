@@ -1,0 +1,2 @@
+在命令前加上gdb --args，例如：
+gdb --args python3 test.py
