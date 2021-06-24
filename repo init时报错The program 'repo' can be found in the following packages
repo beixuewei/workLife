@@ -1,1 +1,4 @@
+原因：当前用户没有sudo权限
+即使在/etc/sudoers里已经给了root权限，也不够
+
 解决办法：sudo adduser your_username sudo
