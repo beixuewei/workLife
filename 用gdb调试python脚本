@@ -1,2 +1,14 @@
 在命令前加上gdb --args，例如：
 gdb --args python3 test.py
+
+如果python脚本会调用到.cpp文件编译出来的.so文件，那么用g++编译.cpp时要记得加-g选项
+
+gdb --args python3 test.py 开始后
+按 r 运行
+按 n 单步运行
+b xxx.cpp:16 命令设置断点，其中16为行号
+info threads 查看线程
+thread 2 切换到2号线程
+info break 查看所有断点
+delete 2 删除2号断点
+bt 查看程序调用栈
