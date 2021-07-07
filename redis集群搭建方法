@@ -40,7 +40,10 @@ vim ${redis_config_8001}/redis.conf
 bind 192.168.1.1  #本地局域网地址
 port 8001 #对外的端口号
 daemonize yes 
-pidfile /home/path0/path1/redis_8001.pid
+pidfile /home/path0/path1/redis_8001.pid  #自定义的pid文件保存路径
+logfile ".myredis/redis8000/redis8000.log"  #自定义log文件保存路径
+cluster-enabled yes
+cluster-config-file node-8001.conf
 
 将该文件分别拷贝至三台服务器上，每台配置两份，对ip和端口号(例如7001、7002)做出相应的修改，
 redis_config_8001=/home/redis-cluster/8001
