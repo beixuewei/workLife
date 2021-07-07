@@ -1,0 +1,14 @@
+1.	下载源码：
+https://releases.llvm.org/download.html#8.0.1
+下载得到compiler-rt-7.1.0.src.tar.xz
+
+2.	修改编译脚本
+tar xvf compiler-rt-7.1.0.src.tar.xz
+cd compiler-rt-7.1.0.src/lib/fuzzer
+vim build.sh
+ 把CXX替换成交叉编译器aarch64-target-linux-gnu-g++，然后保存退出
+
+3.	运行./build.sh，即可在当前目录下得到一个libFuzzer.a
+备注：
+不要选用太高版本的compiler-rt（如11.0.0），否则编译出来的libFuzzer.a可能有兼容性问题，
+表现为：编译或运行时提示-fsanitize-coverage=trace-pc、-fsanitize-recover=address等编译选项不支持
