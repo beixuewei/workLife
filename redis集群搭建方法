@@ -1,0 +1,65 @@
+0.目标： 
+目的是在利用redis搭建一个持久化的分布式数据集群，在三个服务器上搭建6个redis server，3主3备
+
+1. Redis简介 
+Redis集群(Redis Cluster) 是Redis提供的分布式数据库方案，采用Cluster集群模式；(三种常见集群模 式：https://zhuanlan.zhihu.com/p/145186839) 采用的数据分布算法为hash lost算法，有固定的16384个hash slot，对每个key计算CRC16值，然后对 16384取模，可以获取key对应的hash slot；redis cluster中每个master都会持有部分slot，比如有3个 master，那么可能每个master持有5000多个hash slot
+
+2.安装
+- Redis: 
+安装包：
+https://github.com/redis/redis
+安装方法：
+cd path/to/redis
+make
+sudo make install
+
+- hi redis: 
+安装包：https://github.com/redis/hiredis
+安装方法(同Redis)：
+cd path/to/hiredis
+make
+sudo make install
+
+- redis plus plus: 
+安装包：https://github.com/sewenew/redis-plus-plus
+安装方法：
+cd path/to/redis-plus-plus
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make
+make install
+
+3.配置文件并组建集群 
+将Redis安装包内的redis.conf文件拷贝至你的redis-server配置信息路径下，并做如下修改
+redis_config_8001=/home/redis-cluster/8001
+cp redis.conf ${redis_config_8001}
+vim ${redis_config_8001}/redis.conf
+
+对redis.conf文件做如下修改：
+bind 192.168.1.1  #本地局域网地址
+port 8001 #对外的端口号
+daemonize yes 
+pidfile /home/path0/path1/redis_8001.pid
+
+将该文件分别拷贝至三台服务器上，每台配置两份，对ip和端口号(例如7001、7002)做出相应的修改，
+redis_config_8001=/home/redis-cluster/8001
+redis_config_8002=/home/redis-cluster/8002
+并分别执行如下命令拉起：
+./redis-server ${redis_config_8001}/redis.conf
+./redis-server ${redis_config_8002}/redis.conf
+
+查看拉起情况：
+ps -ef | grep redis
+
+将所有三台服务器上的6个redis都配置完毕并拉起后，执行如下操作(假设服务器地址分别 为.1、.2、.3)
+redis_server01=192.168.1.1
+redis_server02=192.168.1.2
+redis_server03=192.168.1.3
+# --cluster-replicas 1 参数表示，配置集群时一个主节点对应一个备用节点；即组成基于三个服务器 的三主三备redis集群
+redis-cli --cluster create ${redis_server01}:8001 ${redis_server01}:8002 ${redis_server02}:8001 ${redis_server02}:8002 ${redis_server03}:8001 ${redis_server03}:8002 --cluster-replicas 1
+
+4.客户端操作 
+# 登录： -h:ip地址； -p:端口号 ./redis-cli -h 192.168.1.1 -p 8001 -c
+# 查看当前节点信息: info replication
+# 查看集群信息: master为主节点，slave为备用节点 cluster nodes
