@@ -1,0 +1,84 @@
+1.	ftp有固定端口号21，因此不需要指定端口号。
+ftp默认登录时需要提供用户名和密码，也可以通过修改server端的配置文件来支持匿名登录
+2.	ftp server和ftp client之间的通信是基于socket套接字的，收发用到的底层c接口为send()和recv()。控制命令用一个socket，当要传输数据时，需要新建另一个socket，该socket在传输结束后要关闭，并赋值为-1。
+3.	ftp server和ftp client之间的通信是CS模式，即：client向server发一个命令/消息，然后server向client返回一个或多个应答。
+常用命令及其正常返回的应答码如下：
+connect		220		#申请连接
+user			331		#用户名
+pass			230		#密码
+binary		200		#设置传输格式为二进制
+type			200		#设置传输格式
+pasv			227		#设置为passive模式
+pwd			257		#获取当前路径
+mkd			257		#新建文件夹
+list			150		#获取当前文件夹下的文件列表
+cd			250		#切换当前路径
+bye			221		#断开连接
+stor			125 或 150		#保存（上传到server）
+quit			221		#断开连接，同bye
+size			213		#获取文件大小(bytes)
+retr			125 或150		#获取（下载到client）
+transfer		226		#获取传输状态（已完成等）
+noop		200		#空命令，用于检查连接状态
+mfmt		213		#修改文件的最后修改时间
+
+通常，1、2开头的应答码表示成功；3开头的应答码表示需要有后续命令；5开头应答码表示失败、有错误，例如：cd some_path失败时，返回550，表示some_path不存在。
+
+4.	client连接server的步骤：
+1)	设置sockaddr_in结构体（用inet_addr()转换ip地址，用htons()转换端口号，再设置sockaddr_in结构体）
+2)	创建socket，调用socket(AF_INET, SOCK_STREAM, IPPROTO_IP)
+3)	同connect()接口进行连接，连接成功后server会发生欢迎信息
+4)	发送用户名、密码
+5)	设置UTF-8模式，命令：opts utf8 on。有的server默认即为此模式
+6)	设置二进制文件格式，命令：type i。有的server默认即为此模式
+
+5.	client断开与server连接的步骤：
+1)	client向server发送bye或quit命令
+2)	client关闭用于发送控制命令的socket，调用接口为close()
+
+6.	检查client与server连接状态的步骤
+1)	client向server发送noop命令
+2)	client确认是否收到应答（应答码200）
+
+7.	发送命令时需要在字符串的末尾添加”\r\n”，然后调用send()接口。注意检查用到的socket是否有效，命令字符串的长度是否超出限制，send()返回值是否大于0
+
+8.	接收应答时要注意在while里面去循环调用recv()，recv()的返回值为接收的字节数。因为接收与发送不同，有可能一次接收不完，所以要循环。接收到的字符串以”\r\n”结尾，这个是判断接收完成的条件。
+char ch;
+while (/*接收字符串未超出上限*/) {
+recv(fd, &ch, sizeof(ch), 0);
+…
+if (/*接收字符串超出上限，或者发现了/r/n结束字符*/) break;
+}
+
+9.	发送数据与发送命令类似，这里不赘述。
+ 
+10.	接收数据与接收应答类似，不过需要在while循环里检查累计收到的字符数是否达到目标
+
+11.	改变当前路径时，检查目标路径是否为“.”或“./”，如果是就不用发任何命令；如果目标路径为“..”或“../”，就发送cdup命令，其它路径，则发送cwd命令
+
+12.	client发送mkd命令时，需要注意一次只能创建一级目录。如果需要创建多级目录，则要发送多次mkd命令。例如：发送cd path0/path1/path2/命令时，如果server返回失败码，则要逐层检查各级目录是否存在：先cd path0，如果server返回失败码，则mkd path0再cd path0；然后cd path1，如果server返回失败码，则mkd path1再cd path1，依次类推。
+
+13.	设置passive模式的步骤：
+1)	server返回的应答字符串格式为：227 entering passive mode (192,168,1,1,12,34)，括号内的数字以逗号分隔。其中192.168.1.1为server的ip地址，然后34*sizeof(BITS_OF_CHAR)+12为server创建的数据socket端口号。34为端口号的低8位，12位端口号的高8位。这里可以用正则表达式去匹配应答字符串。
+std::regex pattern("([0-9]+),([0-9]+),([0-9]+),([0-9]+),([0-9]+),([0-9]+)");
+std::smatch result;
+bool found = regex_search(response, result, pattern);
+int port = stoi(result.str(5)) << (BITS_OF_CHAR) + stoi(result.str(6))
+2)	计算得到传输数据用的port后，client要新建一个socket，然后设置socket的sockaddr_in，再connect()该socket，记录下该socket，后续从该socket传输数据。
+
+14.	设置文件最后修改时间，命令格式mfmt 20200101123456 filename，设置为2020年1月1日12点34份56秒。
+
+15.	文件上传步骤：
+1)	设置passive模式（包括解析应答码中的ip地址、port端口号，新建发送用的socket）
+2)	cd & mkd，切换到目标目录
+3)	发送stor命令
+4)	发送数据
+5)	关闭发送数据用的socket
+6)	检查传输状态（发送transfer命令），此步骤非必选 
+
+16.	文件下载步骤：
+1)	获取目标文件长度
+2)	设置passive模式（包括解析应答码中的ip地址、port端口号，新建发送用的socket）
+3)	发送retr命令
+4)	接收数据
+5)	关闭接收数据用的socket
