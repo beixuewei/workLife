@@ -1,0 +1,28 @@
+1.	client调用redis++接口时，server可能返回的异常有：
+sw::redis::ReplyError	// 接口调用失败
+sw::redis::TimeoutError	// 超时
+sw::redis::ClosedError  	// server端口关闭
+sw::redis::IoError		// IO错误
+sw::redis::Error 		// 其它错误
+可以用catch(const sw::redis::ReplyError &e)的形式捕获，打印e.what()异常原因字符串
+
+2.	github上的开源仓yaml-cpp是解析yaml文件的接口，读取.yaml文件的方式非常简单：
+YAML::Node root = YAML::LoadFile(filePath);
+std::string xxConfig = root[item][subItem].as<std::string>();
+如果解析时发生异常会抛出YAML::ParserException类型的异常
+
+3.	用make_shared模板来实例化RedisCluster
+sw::redis::ConnectionOptions connectionOptions;
+connectionOptions.host = 192.168.1.11
+connectionOptions.port = 8001
+std::make_shared<sw::redis::RedisCluster>(connectionOptions);
+如果server没有启动，或者网路不通/IP不对/port不对，那么make_shared时会抛异常。注意检查make_shared的返回值是否为nullptr
+
+4.	在调用redis++的各接口，在失败时均有可能抛出异常。因此注意要在所有调用redis++接口的语句前后加上try和catch。此外，还可以在调用前先检查是否初始化完成（是否设置了IP和port）、之前make_shared的返回是否为nullptr，为nullptr时尝试重连是否成功。
+
+5.	redis-cli客户端连接server，用命令redis-cli -h 192.168.1.11 -p 8001 -c
+最后的-c表示以集群的方式连接。如果不加-c，当操作的key保存在不同的slot时会发生意想不到的错误。
+
+6.	redis-cli客户端连接server成功后，可以用monitor命令持续检视该server收到的所有命令，便于调试。
+
+7.	利用封装redis++后的接口向server发送命令，结果server没有任何反应，一种可能的原因是，封装redis++时，没有把对应的.hpp头文件编译进去。因为在.hpp文件中定义了一些inline接口，未编译就不会生效。检查办法：看失效的接口是否定义在.hpp文件中。
