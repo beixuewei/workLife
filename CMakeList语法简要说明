@@ -1,0 +1,62 @@
+CMakeLists语法简要说明
+
+add_library(target_name SHARED
+${CMAKE_CURRENT_BINARY_DIR}/yout_file.cpp
+)
+创建一个目标，SHARED表示动态库，STATIC表示静态库
+
+set_target_properties(taget_name
+PROPERTIES
+OUTPUT_NAME new_target_name
+LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/new_dir
+)
+设置目标的名称和输出路径
+
+target_include_directories(target_name PRIVATE
+${TOP}/your_dir1
+${TOP}/your_dir2
+)
+设置头文件搜索路径
+
+target_compile_options(target_name PRIVATE
+-O3
+)
+设置编译选项
+
+target_compile_definitions(target_name PRIVATE
+YOUR_MACRO=1
+)
+指定编译宏
+
+target_link_libraries(target_name PRIVATE
+yaml-cpp
+opencv_core
+)
+指定连接目标
+
+add_executable(target_name
+your_file.cpp
+)
+编译可执行文件
+
+特别地，如果想要批量导入编译规则，可以这样写：
+include(path/to/rule.cmake)
+target_link_libraries(target_name PRIVATE
+$<BUILD_INTERFACE:rule1>
+)
+rule1是一个INTERFACE属性的target，其编译规则在path/to/rule.cmake中定义，可以把通用的编译、连接选项放在path/to/rule.cmake里面
+path/to/rule.cmake的写法跟普通target类似，里面包含：add_library、tareget_compile_options、target_compile_definitions、target_link_options、target_link_directories、target_link_libraries等。
+区别在于写法：
+add_library(rule1 INTERFACE) 原先的PRIVATE要写成INTERFACE
+
+
+target_link_libraries(target_name PRIVATE
+	xx_lib1
+-Wl,--no-as-needed
+xx_lib2
+xx_lib3
+-Wl,--as-needed
+)
+放在-Wl,--no-as-needed和-Wl,--as-needed之间的xx_lib2和xx_lib3会被强制链接，即使它们里面的接口并未被实际调用到。
+gcc默认打开-Wl,--as-needed选项，即：如果.so中的接口未被实际调用，则不会链接该.so文件。
+可以用readelf -d xxx.so命令来查看链接关系是否有NEEDED字段
