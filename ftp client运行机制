@@ -64,7 +64,7 @@ std::regex pattern("([0-9]+),([0-9]+),([0-9]+),([0-9]+),([0-9]+),([0-9]+)");
 std::smatch result;
 bool found = regex_search(response, result, pattern);
 int port = stoi(result.str(5)) << (BITS_OF_CHAR) + stoi(result.str(6))
-2)	计算得到传输数据用的port后，client要新建一个socket，然后设置socket的sockaddr_in，再connect()该socket，记录下该socket，后续从该socket传输数据。
+2)	计算得到传输数据用的port后，client要新建一个socket，然后设置socket的sockaddr_in，再connect()该socket（此处连接成功不会有应答消息返回），记录下该socket，后续从该socket传输数据。
 
 14.	设置文件最后修改时间，命令格式mfmt 20200101123456 filename，设置为2020年1月1日12点34份56秒。
 
