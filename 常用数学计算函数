@@ -1,0 +1,4 @@
+不完全列表：
+divide、gemm、magnitude、sin、ascsin、cos、arccos、max、maxs、mean、meanstddev、exp、arctan、arctan2、lut、remap、resize
+
+大部分函数在opencv中都有对应的实现
