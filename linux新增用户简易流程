@@ -1,3 +1,4 @@
+1、添加用户名、设置密码
 # useradd tony
 # passwd tony
 Enter new UNIX password:
@@ -5,7 +6,7 @@ Retype new UNIX password:
 passwd: password updated successfully
 输入两次密码后设置成功
 
-给tony用户添加root权限：
+2、给tony用户添加root权限：
 方法一：
 sudoedit /etc/sudoers
 添加一行：
@@ -16,10 +17,40 @@ tony ALL=(ALL) ALL
 usermod -g root tony
 这里需要等待一段时间，比较慢
 
+3、设置bash
 ssh登录机器，切换到tony用户，如果发现只显示一个提示符$，那么就
 sudo vim /etc/passwd
 把 tony:x:1001:0::/home/tony:/bin/sh 末尾的sh改成bash，然后保存退出
 
-在/home目录下新建tony文件夹
+4、在/home目录下新建tony文件夹
 cd /home
 mkdir tony
+
+5、将/home/tony的所有者改为tony
+sudo chown tony:tony /home/tony
+
+6、/home/tony/.bashrc文件如果是空的，就从其它用户那里拷一份过来，注意把用户名替换一下
+bashrc文件里定义了ll命令，如果没有该文件，则ll命令对tony用户不可用
+
+
+7、检查/home/tony/.profile文件是否不存在，如果不存在，则创建，里面添加以下内容：
+# ~/.profile: executed by the command interpreter for login shells.
+# This file is not read by bash(1), if ~/.bash_profile or ~/.bash_login
+# exists.
+# see /usr/share/doc/bash/examples/startup-files for examples.
+# the files are located in the bash-doc package.
+
+# the default umask is set in /etc/profile; for setting the umask
+# for ssh logins, install and configure the libpam-umask package.
+#umask 022
+
+# if running bash
+if [ -n "$BASH_VERSION" ]; then
+    # include .bashrc if it exists
+    if [ -f "$HOME/.bashrc" ]; then
+        . "$HOME/.bashrc"
+    fi
+fi
+
+# set PATH so it includes user's private bin directories
+PATH="$HOME/bin:$HOME/.local/bin:$PATH"
